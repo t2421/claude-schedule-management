@@ -70,6 +70,7 @@
       "enabled": "有効",
       "workdir": "作業ディレクトリ",
       "workdirPlaceholder": "/Users/you/projects/foo",
+      "workdirRequired": "作業ディレクトリは必須です。絶対パスを指定してください。",
       "prompt": "プロンプト",
       "promptPlaceholder": "Claude にやってもらいたいこと",
       "claudeArgs": "claude_args",

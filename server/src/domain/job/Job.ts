@@ -7,7 +7,7 @@ export type JobProps = {
   description?: string;
   enabled: boolean;
   schedule: CronSchedule;
-  workingDirectory?: string;
+  workingDirectory: string;
   prompt: string;
   claudeArgs: string[];
   env?: Record<string, string>;
@@ -34,17 +34,24 @@ export class Job {
     if (props.timeoutSeconds !== undefined && props.timeoutSeconds < 0) {
       throw new ValidationError("timeout_seconds must be >= 0");
     }
-    if (props.workingDirectory !== undefined) {
-      const wd = props.workingDirectory;
-      if (wd !== "" && !wd.startsWith("/")) {
-        throw new ValidationError("working_directory must be an absolute path");
-      }
-      // Reject `..` components to prevent the runner from cd-ing into a
-      // parent of an intended directory — the user must spell out the full
-      // path they want.
-      if (wd.split("/").includes("..")) {
-        throw new ValidationError("working_directory must not contain '..'");
-      }
+    // working_directory is required: without it the runner falls back to the
+    // launchd daemon's cwd, which is almost never what the user wants and
+    // makes failures hard to diagnose. Force the user to spell it out.
+    if (
+      typeof props.workingDirectory !== "string" ||
+      props.workingDirectory.trim() === ""
+    ) {
+      throw new ValidationError("working_directory is required");
+    }
+    const wd = props.workingDirectory;
+    if (!wd.startsWith("/")) {
+      throw new ValidationError("working_directory must be an absolute path");
+    }
+    // Reject `..` components to prevent the runner from cd-ing into a
+    // parent of an intended directory — the user must spell out the full
+    // path they want.
+    if (wd.split("/").includes("..")) {
+      throw new ValidationError("working_directory must not contain '..'");
     }
     if (props.env) {
       for (const [k, v] of Object.entries(props.env)) {
@@ -75,7 +82,7 @@ export class Job {
   get description(): string | undefined { return this.props.description; }
   get enabled(): boolean { return this.props.enabled; }
   get schedule(): CronSchedule { return this.props.schedule; }
-  get workingDirectory(): string | undefined { return this.props.workingDirectory; }
+  get workingDirectory(): string { return this.props.workingDirectory; }
   get prompt(): string { return this.props.prompt; }
   get claudeArgs(): string[] { return [...this.props.claudeArgs]; }
   get env(): Record<string, string> | undefined {
@@ -115,7 +122,7 @@ export class Job {
       enabled: j.enabled !== false,
       schedule: CronSchedule.parse(cronRaw),
       workingDirectory:
-        typeof j.working_directory === "string" ? j.working_directory : undefined,
+        typeof j.working_directory === "string" ? j.working_directory : "",
       prompt: typeof j.prompt === "string" ? j.prompt : "",
       claudeArgs: Array.isArray(j.claude_args)
         ? j.claude_args.filter((x): x is string => typeof x === "string")

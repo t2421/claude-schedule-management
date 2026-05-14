@@ -70,6 +70,7 @@
       "enabled": "Enabled",
       "workdir": "Working directory",
       "workdirPlaceholder": "/Users/you/projects/foo",
+      "workdirRequired": "Working directory is required. Provide an absolute path.",
       "prompt": "Prompt",
       "promptPlaceholder": "What you want Claude to do",
       "claudeArgs": "claude_args",

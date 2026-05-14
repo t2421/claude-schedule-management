@@ -109,6 +109,11 @@ export function JobEdit({ mode }: Props) {
     setSaving(true);
     setErr(null);
     try {
+      // Mirror the server-side rule so the user gets immediate feedback
+      // instead of waiting for a round-trip.
+      if (!job.working_directory || !job.working_directory.trim()) {
+        throw new Error(t("edit.field.workdirRequired"));
+      }
       const parsedEnv: Record<string, string> = {};
       for (const line of envText.split("\n")) {
         const s = line.trim();
@@ -210,6 +215,7 @@ export function JobEdit({ mode }: Props) {
               value={job.working_directory ?? ""}
               onChange={(e) => update("working_directory", e.target.value)}
               placeholder={t("edit.field.workdirPlaceholder")}
+              required
             />
             <button
               type="button"

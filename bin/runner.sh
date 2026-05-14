@@ -102,6 +102,7 @@ if [ "$TIMEOUT" != "0" ] && [ "$TIMEOUT" != "null" ] && [ -n "$TIMEOUT" ]; then
   if command -v gtimeout >/dev/null; then
     gtimeout "$TIMEOUT" "$CLAUDE" "${ARGS[@]}" "$PROMPT" >> "$LOG_FILE" 2>&1
   else
+    echo "[$(date -Iseconds)] WARN timeout_seconds=$TIMEOUT configured but gtimeout not found; running without timeout (brew install coreutils)" >> "$LOG_FILE"
     "$CLAUDE" "${ARGS[@]}" "$PROMPT" >> "$LOG_FILE" 2>&1
   fi
 else

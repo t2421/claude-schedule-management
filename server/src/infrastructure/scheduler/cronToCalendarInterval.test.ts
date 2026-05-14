@@ -80,4 +80,25 @@ describe("cronToCalendarIntervals", () => {
     assert.deepEqual(r[0], { Minute: 0 });
     assert.deepEqual(r[59], { Minute: 59 });
   });
+
+  it("rejects empty entries in comma lists (trailing comma)", () => {
+    assert.throws(() => cronToCalendarIntervals("0 9 * * 1,"), ValidationError);
+  });
+
+  it("rejects empty entries in comma lists (leading comma)", () => {
+    assert.throws(() => cronToCalendarIntervals("0 9 * * ,1"), ValidationError);
+  });
+
+  it("rejects empty entries in comma lists (consecutive commas)", () => {
+    assert.throws(() => cronToCalendarIntervals("0 9 * * 1,,2"), ValidationError);
+  });
+
+  it("rejects non-decimal numeric forms (hex)", () => {
+    assert.throws(() => cronToCalendarIntervals("0x3b * * * *"), ValidationError);
+  });
+
+  it("rejects values with leading sign", () => {
+    assert.throws(() => cronToCalendarIntervals("+0 9 * * *"), ValidationError);
+    assert.throws(() => cronToCalendarIntervals("-1 9 * * *"), ValidationError);
+  });
 });

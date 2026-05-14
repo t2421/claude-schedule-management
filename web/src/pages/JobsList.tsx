@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { api, type JobWithStatus } from "../api";
+import { api, type JobWithStatus, type Orphan } from "../api";
 
 export function JobsList() {
   const { t } = useTranslation();
-  const [data, setData] = useState<{ jobs: JobWithStatus[]; orphans: string[] } | null>(null);
+  const [data, setData] = useState<{ jobs: JobWithStatus[]; orphans: Orphan[] } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const nav = useNavigate();
@@ -51,10 +51,10 @@ export function JobsList() {
     }
   }
 
-  async function removeOrphan(name: string) {
-    setBusy(name);
+  async function removeOrphan(label: string) {
+    setBusy(label);
     try {
-      await api.removeOrphan(name);
+      await api.removeOrphan(label);
       await load();
     } catch (e) {
       setErr((e as Error).message);
@@ -159,19 +159,36 @@ export function JobsList() {
           <table>
             <thead>
               <tr>
-                <th>{t("jobs.col.name")}</th>
+                <th>{t("orphans.col.label")}</th>
+                <th>{t("orphans.col.where")}</th>
+                <th>{t("jobs.col.status")}</th>
                 <th style={{ width: 200 }}>{t("jobs.col.actions")}</th>
               </tr>
             </thead>
             <tbody>
-              {data.orphans.map((name) => (
-                <tr key={name}>
-                  <td className="mono">{name}</td>
+              {data.orphans.map((o) => (
+                <tr key={o.label}>
+                  <td className="mono">{o.label}</td>
+                  <td className="mono" style={{ fontSize: 11 }}>
+                    {[
+                      o.inAgentsDir && "LaunchAgents",
+                      o.inLocalPlists && "plists/",
+                    ]
+                      .filter(Boolean)
+                      .join(" + ") || "—"}
+                  </td>
+                  <td>
+                    {o.loaded ? (
+                      <span className="badge warn">{t("jobs.status.loaded")}</span>
+                    ) : (
+                      <span className="badge muted">{t("orphans.notLoaded")}</span>
+                    )}
+                  </td>
                   <td>
                     <button
                       className="danger"
-                      onClick={() => removeOrphan(name)}
-                      disabled={busy === name}
+                      onClick={() => removeOrphan(o.label)}
+                      disabled={busy === o.label}
                     >
                       {t("orphans.action.remove")}
                     </button>

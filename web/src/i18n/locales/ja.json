@@ -43,7 +43,12 @@
   },
   "orphans": {
     "title": "孤立ジョブ",
-    "subtitle": "(launchd に登録されているが YAML が無い)",
+    "subtitle": "(launchd 側に残っているが YAML が無い)",
+    "notLoaded": "ファイルのみ",
+    "col": {
+      "label": "Label",
+      "where": "場所"
+    },
     "action": {
       "remove": "アンロードして削除"
     }

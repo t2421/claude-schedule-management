@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Orphan detection no longer requires the launchd label to start with the
+  current `LABEL_PREFIX`. It identifies orphans by inspecting plist contents
+  (does `ProgramArguments[0]` equal our `bin/runner.sh`?), which lets the UI
+  surface and remove stale entries left behind by a previous label scheme.
+- Orphan removal endpoint switched to `POST /api/jobs/orphans/remove`
+  with `{ label }` in the body (labels contain dots).
+
 ### Added
 
 - Initial release.

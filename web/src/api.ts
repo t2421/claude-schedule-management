@@ -21,6 +21,14 @@ export type JobWithStatus = Job & { status: JobStatus };
 
 export type LogFile = { file: string; size: number; mtime: string };
 
+export type Orphan = {
+  name: string;
+  label: string;
+  loaded: boolean;
+  inAgentsDir: boolean;
+  inLocalPlists: boolean;
+};
+
 const BASE = "/api";
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
@@ -37,7 +45,7 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   listJobs: () =>
-    http<{ jobs: JobWithStatus[]; orphans: string[] }>("/jobs"),
+    http<{ jobs: JobWithStatus[]; orphans: Orphan[] }>("/jobs"),
   getJob: (name: string) =>
     http<{ job: Job; status: JobStatus }>(`/jobs/${name}`),
   saveJob: (name: string, job: Job) =>
@@ -49,8 +57,11 @@ export const api = {
     http<{ ok: boolean }>(`/jobs/${name}`, { method: "DELETE" }),
   applyJob: (name: string) =>
     http<{ ok: boolean }>(`/jobs/${name}/apply`, { method: "POST" }),
-  removeOrphan: (name: string) =>
-    http<{ ok: boolean }>(`/jobs/orphans/${name}/remove`, { method: "POST" }),
+  removeOrphan: (label: string) =>
+    http<{ ok: boolean }>(`/jobs/orphans/remove`, {
+      method: "POST",
+      body: JSON.stringify({ label }),
+    }),
   kickstart: (name: string) =>
     http<{ ok: boolean; error?: string }>(`/runs/${name}/kickstart`, {
       method: "POST",

@@ -7,12 +7,14 @@ import {
   LABEL_PREFIX,
   LAUNCH_AGENTS_DIR,
   PLISTS_DIR,
+  RUNNER,
+  SERVICE_LABEL,
   jobLogsDirFor,
   labelFor,
   linkedPlistPathFor,
   plistPathFor,
 } from "./paths.js";
-import type { Job, JobStatus } from "./types.js";
+import type { Job, JobStatus, Orphan } from "./types.js";
 
 function uid(): number {
   return os.userInfo().uid;
@@ -50,7 +52,6 @@ export async function applyJob(job: Job): Promise<void> {
   await fs.writeFile(generated, plistContent, "utf8");
 
   const linked = linkedPlistPathFor(job.name);
-  // Refresh symlink in ~/Library/LaunchAgents
   try {
     await fs.unlink(linked);
   } catch (err) {
@@ -58,7 +59,6 @@ export async function applyJob(job: Job): Promise<void> {
   }
   await fs.symlink(generated, linked);
 
-  // Unload first if already loaded, then load
   await run("launchctl", ["bootout", gui(), linked]);
   if (job.enabled) {
     const r = await run("launchctl", ["bootstrap", gui(), linked]);
@@ -104,27 +104,142 @@ export async function listLoaded(): Promise<Map<string, JobStatus>> {
   return out;
 }
 
-export async function listOrphans(knownJobNames: Set<string>): Promise<string[]> {
-  // Anything loaded under our prefix that isn't in jobs/ is an orphan.
-  const loaded = await listLoaded();
-  const orphans: string[] = [];
-  for (const name of loaded.keys()) {
-    if (!knownJobNames.has(name)) orphans.push(name);
+// Read all labels currently loaded for this user (not filtered by prefix).
+async function listAllLoadedLabels(): Promise<Set<string>> {
+  const r = await run("launchctl", ["list"]);
+  const labels = new Set<string>();
+  if (r.code !== 0) return labels;
+  const lines = r.stdout.split("\n").slice(1);
+  for (const line of lines) {
+    const cols = line.split(/\s+/);
+    const label = cols[2];
+    if (label) labels.add(label);
   }
-  // Also stale plists on disk that aren't in jobs/
+  return labels;
+}
+
+// Inspect a plist file and decide if it's one our tool generated.
+// Detection key: ProgramArguments[0] equals the absolute path to our runner.sh.
+async function inspectPlist(
+  plistPath: string,
+): Promise<{ ours: boolean; jobName: string | null }> {
+  try {
+    const content = await fs.readFile(plistPath, "utf8");
+    if (!content.includes(RUNNER)) return { ours: false, jobName: null };
+    // Extract job name: the <string> immediately following the runner path inside
+    // ProgramArguments. Plists are XML; a light regex is enough here.
+    const escRunner = RUNNER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = content.match(
+      new RegExp(`<string>${escRunner}</string>\\s*<string>([^<]+)</string>`),
+    );
+    return { ours: true, jobName: m?.[1] ?? null };
+  } catch {
+    return { ours: false, jobName: null };
+  }
+}
+
+export async function listOrphans(
+  knownJobNames: Set<string>,
+): Promise<Orphan[]> {
+  const byLabel = new Map<string, Orphan>();
+
+  const recordOrphan = (
+    label: string,
+    jobName: string | null,
+    where: "agents" | "local",
+  ) => {
+    if (label === SERVICE_LABEL) return;
+    const name = jobName ?? label;
+    if (knownJobNames.has(name)) return;
+    const existing = byLabel.get(label);
+    if (existing) {
+      if (where === "agents") existing.inAgentsDir = true;
+      if (where === "local") existing.inLocalPlists = true;
+      return;
+    }
+    byLabel.set(label, {
+      name,
+      label,
+      loaded: false,
+      inAgentsDir: where === "agents",
+      inLocalPlists: where === "local",
+    });
+  };
+
+  // 1. Scan ~/Library/LaunchAgents for plist files referencing our runner.
+  try {
+    const files = await fs.readdir(LAUNCH_AGENTS_DIR);
+    for (const f of files) {
+      if (!f.endsWith(".plist")) continue;
+      const label = path.basename(f, ".plist");
+      if (label === SERVICE_LABEL) continue;
+      const { ours, jobName } = await inspectPlist(path.join(LAUNCH_AGENTS_DIR, f));
+      if (ours) recordOrphan(label, jobName, "agents");
+    }
+  } catch {
+    // ignore (missing dir)
+  }
+
+  // 2. Scan our generated plists/ directory for stale files.
   try {
     const files = await fs.readdir(PLISTS_DIR);
     for (const f of files) {
       if (!f.endsWith(".plist")) continue;
       const label = path.basename(f, ".plist");
-      if (!label.startsWith(LABEL_PREFIX + ".")) continue;
-      const name = label.slice(LABEL_PREFIX.length + 1);
-      if (!knownJobNames.has(name) && !orphans.includes(name)) {
-        orphans.push(name);
-      }
+      if (label === SERVICE_LABEL) continue;
+      const { ours, jobName } = await inspectPlist(path.join(PLISTS_DIR, f));
+      if (ours) recordOrphan(label, jobName, "local");
     }
   } catch {
     // ignore
   }
-  return orphans;
+
+  // 3. Mark loaded status from launchctl. Also catch loaded entries that have
+  //    no plist file on disk (rare, but possible if the user deleted the file).
+  const loadedLabels = await listAllLoadedLabels();
+  for (const label of loadedLabels) {
+    if (label === SERVICE_LABEL) continue;
+    const existing = byLabel.get(label);
+    if (existing) {
+      existing.loaded = true;
+      continue;
+    }
+    // Not in either plist dir but loaded. Only consider it ours if the label
+    // matches the current prefix (best effort — we can't read the plist now).
+    if (label.startsWith(LABEL_PREFIX + ".")) {
+      const name = label.slice(LABEL_PREFIX.length + 1);
+      if (!knownJobNames.has(name)) {
+        byLabel.set(label, {
+          name,
+          label,
+          loaded: true,
+          inAgentsDir: false,
+          inLocalPlists: false,
+        });
+      }
+    }
+  }
+
+  return Array.from(byLabel.values()).sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
+}
+
+// Remove an orphan by its full launchd label. Works regardless of which prefix
+// it was created under.
+export async function removeOrphanByLabel(label: string): Promise<void> {
+  const linked = path.join(LAUNCH_AGENTS_DIR, `${label}.plist`);
+  const local = path.join(PLISTS_DIR, `${label}.plist`);
+  await run("launchctl", ["bootout", `${gui()}/${label}`]);
+  await run("launchctl", ["bootout", gui(), linked]);
+  try {
+    await fs.unlink(linked);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+  try {
+    await fs.unlink(local);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
 }

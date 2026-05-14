@@ -24,3 +24,14 @@ export type RunRecord = {
   exitCode?: number;
   logFile: string;
 };
+
+export type Orphan = {
+  // Job name extracted from the plist's ProgramArguments[1], when discoverable.
+  name: string;
+  // Full launchd label.
+  label: string;
+  // Is the service currently loaded in launchd?
+  loaded: boolean;
+  inAgentsDir: boolean;
+  inLocalPlists: boolean;
+};

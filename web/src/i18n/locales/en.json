@@ -43,7 +43,12 @@
   },
   "orphans": {
     "title": "Orphans",
-    "subtitle": "(loaded in launchd but no YAML)",
+    "subtitle": "(installed in launchd but no YAML)",
+    "notLoaded": "stale file",
+    "col": {
+      "label": "Label",
+      "where": "Where"
+    },
     "action": {
       "remove": "Unload & remove"
     }

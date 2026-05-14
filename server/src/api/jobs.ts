@@ -10,6 +10,7 @@ import {
   applyJob,
   listLoaded,
   listOrphans,
+  removeOrphanByLabel,
   unloadJob,
 } from "../lib/launchctl.js";
 
@@ -72,8 +73,12 @@ jobsApi.post("/:name/apply", async (c) => {
   }
 });
 
-jobsApi.post("/orphans/:name/remove", async (c) => {
-  const name = c.req.param("name");
-  await unloadJob(name);
+// Remove an orphan by its full launchd label (passed in request body).
+// Labels contain dots, which makes them awkward to encode in URL path params.
+jobsApi.post("/orphans/remove", async (c) => {
+  const body = await c.req.json().catch(() => ({}) as Record<string, unknown>);
+  const label = typeof body.label === "string" ? body.label : "";
+  if (!label) return c.json({ error: "label is required" }, 400);
+  await removeOrphanByLabel(label);
   return c.json({ ok: true });
 });

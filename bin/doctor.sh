@@ -33,6 +33,27 @@ check_required() {
   fi
 }
 
+check_recommended() {
+  local name="$1"
+  local desc="$2"
+  local install_hint="$3"
+  shift 3
+  local found=""
+  for candidate in "$@"; do
+    if [ -x "$candidate" ] || command -v "$candidate" >/dev/null 2>&1; then
+      found="$candidate"
+      break
+    fi
+  done
+  if [ -n "$found" ]; then
+    printf "  %s  %-10s %s\n" "$(green '✓')" "$name" "$(command -v "$found" 2>/dev/null || echo "$found")"
+    ok=$((ok+1))
+  else
+    printf "  %s  %-10s %s\n" "$(yellow '!')" "$name" "$install_hint"
+    warn=$((warn+1))
+  fi
+}
+
 check_version() {
   local name="$1"
   local needed_major="$2"
@@ -67,6 +88,12 @@ check_required "yq"         "yq"          "brew install yq" \
   "yq" "/opt/homebrew/bin/yq" "/usr/local/bin/yq"
 check_required "launchctl"  "launchctl"   "built into macOS — something is very wrong" \
   "launchctl"
+
+# Optional but recommended: gtimeout (GNU coreutils) enforces job-level
+# timeout_seconds in bin/runner.sh. Without it, timeouts are silently ignored.
+check_recommended "gtimeout" "gtimeout" \
+  "optional — brew install coreutils (enables timeout_seconds enforcement)" \
+  "gtimeout" "/opt/homebrew/bin/gtimeout" "/usr/local/bin/gtimeout"
 
 # Version warnings
 if command -v node >/dev/null; then

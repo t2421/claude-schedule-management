@@ -48,9 +48,9 @@ export class Job {
             `env var name "${k}" is invalid (must match ${ENV_KEY_RE})`,
           );
         }
-        if (v.includes("\n")) {
+        if (v.includes("\n") || v.includes("\0")) {
           throw new ValidationError(
-            `env var "${k}" value contains a newline`,
+            `env var "${k}" value contains a newline or NUL`,
           );
         }
       }

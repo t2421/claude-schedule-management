@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Permission preset dropdown next to `claude_args` in the job editor:
+  Plan-only, limited tool allowlist, and "bypass permissions" templates.
+  Scheduled runs without a TTY would otherwise hang on tool prompts —
+  the README and SECURITY notes now document the trade-offs.
+- README screenshots (`docs/screenshots/`) for jobs list, edit form, and
+  log viewer. Reproducible via `docs/take-screenshots.mjs`.
+
 ### Security
 
 - **Host-header allowlist on every request** — defeats DNS rebinding from a

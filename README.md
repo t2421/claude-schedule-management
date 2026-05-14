@@ -7,6 +7,12 @@
 Manage all your scheduled Claude prompts from one browser tab. YAML is the
 source of truth, the web UI just edits it.
 
+## Screenshots
+
+| Jobs list | New / edit job | Log viewer |
+|---|---|---|
+| ![Jobs list](docs/screenshots/01-jobs-list.png) | ![Edit form](docs/screenshots/02-job-new.png) | ![Log viewer](docs/screenshots/03-job-logs.png) |
+
 ```
 ┌─ web UI (React) ──── HTTP ──── Hono API ─────┐
 │   /jobs                        ├─ jobs/*.yaml  (source of truth)
@@ -118,6 +124,23 @@ timeout_seconds: 600
 ```
 
 See [`jobs/examples/`](jobs/examples) for more.
+
+### Scheduled job permission strategy
+
+Scheduled runs happen without a TTY. If the prompt triggers a tool that asks
+for permission, no one is there to answer — the job will either fail or hang.
+Pick one of these strategies and bake it into `claude_args`:
+
+| Strategy | `claude_args` | Risk | When |
+|---|---|---|---|
+| Plan only (safest) | `["-p", "--permission-mode", "plan"]` | Lowest | Read-only review / proposals |
+| Limited allowlist | `["-p", "--allowedTools", "Read,Grep,Glob"]` | Low | Inspect-a-repo style jobs |
+| Bypass permissions | `["-p", "--dangerously-skip-permissions"]` | High | Trusted automation with full FS / network access |
+| Per-project settings | `["-p"]` + a `.claude/settings.json` in the working dir with `permissions.allow` | Medium | Granular, project-tracked rules |
+
+The UI offers these as presets next to the `claude_args` field. Always set
+`timeout_seconds` as a safety net — install GNU coreutils
+(`brew install coreutils`) so the runner can enforce it with `gtimeout`.
 
 ### Supported cron syntax
 

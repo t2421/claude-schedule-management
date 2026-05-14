@@ -74,6 +74,11 @@
       "promptPlaceholder": "Claude にやってもらいたいこと",
       "claudeArgs": "claude_args",
       "claudeArgsHint": "空白区切り、デフォルト: -p",
+      "permissionPreset": {
+        "placeholder": "Permission preset を選ぶ...",
+        "selected": "Permission preset",
+        "hint": "スケジュール実行は TTY が無いので、許可プロンプトで止まらないよう戦略を選ぶこと。"
+      },
       "timeout": "timeout_seconds",
       "timeoutPlaceholder": "600",
       "env": "環境変数",
@@ -100,5 +105,10 @@
     "weekday9": "平日 9:00",
     "monday9": "月曜 9:00",
     "monthly1": "毎月1日 0:00"
+  },
+  "permissionPresets": {
+    "plan": "Plan のみ（読み取り専用、最も安全）",
+    "allowedTools": "限定 allowlist (Read,Grep,Glob)",
+    "bypass": "全許可スキップ（フル権限、危険）"
   }
 }

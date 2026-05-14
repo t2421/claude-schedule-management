@@ -74,6 +74,11 @@
       "promptPlaceholder": "What you want Claude to do",
       "claudeArgs": "claude_args",
       "claudeArgsHint": "space separated; default: -p",
+      "permissionPreset": {
+        "placeholder": "Permission preset...",
+        "selected": "Permission preset",
+        "hint": "Scheduled runs have no TTY. Pick a strategy so permission prompts don't hang the job."
+      },
       "timeout": "timeout_seconds",
       "timeoutPlaceholder": "600",
       "env": "Env vars",
@@ -100,5 +105,10 @@
     "weekday9": "Weekdays at 9:00",
     "monday9": "Mondays at 9:00",
     "monthly1": "1st of every month at 0:00"
+  },
+  "permissionPresets": {
+    "plan": "Plan only (read-only, safest)",
+    "allowedTools": "Limited allowlist (Read,Grep,Glob)",
+    "bypass": "Bypass all permissions (full power, dangerous)"
   }
 }

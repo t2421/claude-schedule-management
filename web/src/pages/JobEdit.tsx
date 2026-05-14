@@ -30,6 +30,15 @@ const PRESET_DEFS: { key: string; value: string }[] = [
   { key: "monthly1", value: "0 0 1 * *" },
 ];
 
+// claude CLI permission presets. Scheduled runs have no TTY, so a job that
+// triggers a permission prompt will fail or hang — pick one of these
+// strategies before saving.
+const PERMISSION_PRESETS: { key: string; value: string }[] = [
+  { key: "plan", value: "-p --permission-mode plan" },
+  { key: "allowedTools", value: "-p --allowedTools Read,Grep,Glob" },
+  { key: "bypass", value: "-p --dangerously-skip-permissions" },
+];
+
 export function JobEdit({ mode }: Props) {
   const { t } = useTranslation();
   const { name } = useParams<{ name: string }>();
@@ -44,6 +53,15 @@ export function JobEdit({ mode }: Props) {
   const presets = useMemo(
     () =>
       PRESET_DEFS.map((p) => ({ label: t(`presets.${p.key}`), value: p.value })),
+    [t],
+  );
+
+  const permissionPresets = useMemo(
+    () =>
+      PERMISSION_PRESETS.map((p) => ({
+        label: t(`permissionPresets.${p.key}`),
+        value: p.value,
+      })),
     [t],
   );
 
@@ -116,6 +134,8 @@ export function JobEdit({ mode }: Props) {
 
   const presetMatch =
     presets.find((p) => p.value === job.schedule.cron)?.value ?? "";
+  const permissionPresetMatch =
+    permissionPresets.find((p) => p.value === argsText.trim())?.value ?? "";
 
   return (
     <>
@@ -213,7 +233,32 @@ export function JobEdit({ mode }: Props) {
           <label>
             {t("edit.field.claudeArgs")}{" "}
             <span className="cron-hint">({t("edit.field.claudeArgsHint")})</span>
-            <input value={argsText} onChange={(e) => setArgsText(e.target.value)} />
+            <div className="input-group">
+              <select
+                className="input-group-select"
+                value={permissionPresetMatch}
+                onChange={(e) => {
+                  if (e.target.value) setArgsText(e.target.value);
+                }}
+              >
+                <option value="">
+                  {permissionPresetMatch
+                    ? t("edit.field.permissionPreset.selected")
+                    : t("edit.field.permissionPreset.placeholder")}
+                </option>
+                {permissionPresets.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="input-group-input mono"
+                value={argsText}
+                onChange={(e) => setArgsText(e.target.value)}
+              />
+            </div>
+            <span className="cron-hint">{t("edit.field.permissionPreset.hint")}</span>
           </label>
           <label>
             {t("edit.field.timeout")}

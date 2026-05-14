@@ -36,7 +36,14 @@ export class FileLogReader implements LogReader {
     const fullPath = path.join(jobLogsDir(jobName.value), file);
 
     if (tailBytes !== undefined) {
-      const tail = Math.max(1, Math.min(1_000_000, tailBytes));
+      // NaN / Infinity / negatives / floats would either crash Buffer.alloc()
+      // or silently produce surprising results. Reject at the I/O boundary so
+      // callers see a clean ValidationError (mapped to HTTP 400 by the route
+      // layer) instead of a 500 with an opaque RangeError.
+      if (!Number.isInteger(tailBytes) || tailBytes <= 0) {
+        throw new ValidationError("tail must be a positive integer");
+      }
+      const tail = Math.min(1_000_000, tailBytes);
       const stat = await fs.stat(fullPath);
       const start = Math.max(0, stat.size - tail);
       const fh = await fs.open(fullPath, "r");

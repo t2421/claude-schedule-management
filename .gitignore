@@ -5,14 +5,14 @@ dist/
 .env
 .env.local
 
-# generated artifacts
-plists/*.plist
-logs/
+# generated artifacts (top-level only — leading slash anchors to repo root)
+/plists/*.plist
+/logs/
 
 # user-created job YAMLs (templates in jobs/examples/ are committed)
-jobs/*.yaml
-jobs/*.yml
+/jobs/*.yaml
+/jobs/*.yml
 
 # but keep placeholder directories
-!plists/.gitkeep
-!logs/.gitkeep
+!/plists/.gitkeep
+!/logs/.gitkeep

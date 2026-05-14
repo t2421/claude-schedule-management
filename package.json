@@ -4,6 +4,7 @@
   "private": true,
   "description": "Browser-based UI for scheduling Claude Code prompts as launchd jobs on macOS.",
   "license": "MIT",
+  "author": "REPLACE_ME_AUTHOR",
   "type": "module",
   "homepage": "https://github.com/REPLACE_ME/claude-schedule-management#readme",
   "repository": {

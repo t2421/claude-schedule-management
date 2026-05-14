@@ -52,10 +52,23 @@ bin/doctor.sh
 ```bash
 git clone https://github.com/REPLACE_ME/claude-schedule-management.git
 cd claude-schedule-management
+bin/personalize.sh   # rewrites GitHub URLs / LICENSE / author (one-time, optional)
 npm install
 npm run build
 bin/install-service.sh
 open http://127.0.0.1:7878
+```
+
+`bin/personalize.sh` is interactive and replaces placeholder GitHub
+URLs in `package.json`, `README.md`, `README.ja.md`, and the
+`LICENSE` copyright line. Skip it if you're just trying the tool
+locally; run it before publishing your fork. Also supports
+non-interactive use via environment variables:
+
+```bash
+GITHUB_USER=alice REPO_NAME=my-fork \
+  AUTHOR_NAME="Alice Doe" AUTHOR_EMAIL=alice@example.com \
+  CONFIRM_YES=1 bin/personalize.sh
 ```
 
 `install-service.sh` writes `~/Library/LaunchAgents/local.claude-schedule.service.plist`

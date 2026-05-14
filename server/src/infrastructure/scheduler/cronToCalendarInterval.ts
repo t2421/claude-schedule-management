@@ -18,9 +18,11 @@ const RANGES = {
   dow: [0, 6],
 } as const;
 
-function parseField(raw: string, kind: keyof typeof RANGES): FieldSpec {
+const DECIMAL_INT = /^\d+$/;
+
+function parseField(rawInput: string, kind: keyof typeof RANGES): FieldSpec {
   const [min, max] = RANGES[kind];
-  raw = raw.trim();
+  const raw = rawInput.trim();
   if (raw === "*") return { wildcard: true, values: [] };
 
   const stepMatch = raw.match(/^\*\/(\d+)$/);
@@ -43,11 +45,10 @@ function parseField(raw: string, kind: keyof typeof RANGES): FieldSpec {
       if (a > b) throw new ValidationError(`invalid range in ${kind}: ${part}`);
       for (let v = a; v <= b; v++) values.push(v);
     } else {
-      const n = Number(part);
-      if (!Number.isInteger(n)) {
-        throw new ValidationError(`invalid value in ${kind}: ${part}`);
+      if (!DECIMAL_INT.test(part)) {
+        throw new ValidationError(`invalid value in ${kind}: "${part}"`);
       }
-      values.push(n);
+      values.push(Number(part));
     }
   }
 

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Host-header allowlist on every request** — defeats DNS rebinding from a
+  browser tab that resolves an attacker domain to `127.0.0.1`. Configurable
+  via `CLAUDE_SCHEDULE_EXTRA_HOSTS`.
+- **Orphan removal label validation** (`^[A-Za-z0-9][A-Za-z0-9._-]*$`, no
+  `..`) — closes a path-traversal-by-label that could delete arbitrary
+  `.plist` files outside `~/Library/LaunchAgents`.
+- **`working_directory` validation** — must be an absolute path with no `..`
+  components.
+- **Env var name / value validation** — names match `^[A-Za-z_][A-Za-z0-9_]*$`;
+  values cannot contain newlines. Prevents corruption of the runner's
+  KEY=VALUE parsing loop.
+- **`claude_args` newline / NUL rejection** — flags still flow through but
+  cannot carry control characters.
+- **Error message sanitization** — the home directory is stripped from HTTP
+  error responses.
+
 ### Changed
 
 - Server reorganized into domain / application / infrastructure / interfaces

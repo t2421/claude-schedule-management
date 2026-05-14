@@ -14,6 +14,10 @@ export type JobProps = {
   timeoutSeconds?: number;
 };
 
+// POSIX env variable name. Conservative — runner.sh parses env entries
+// line-by-line, so a name with newlines or = would corrupt the loop.
+const ENV_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
 // Entity. Owns invariants for a single job. Constructed only via Job.create.
 export class Job {
   private constructor(private readonly props: JobProps) {}
@@ -24,6 +28,40 @@ export class Job {
     }
     if (props.timeoutSeconds !== undefined && props.timeoutSeconds < 0) {
       throw new ValidationError("timeout_seconds must be >= 0");
+    }
+    if (props.workingDirectory !== undefined) {
+      const wd = props.workingDirectory;
+      if (wd !== "" && !wd.startsWith("/")) {
+        throw new ValidationError("working_directory must be an absolute path");
+      }
+      // Reject `..` components to prevent the runner from cd-ing into a
+      // parent of an intended directory — the user must spell out the full
+      // path they want.
+      if (wd.split("/").includes("..")) {
+        throw new ValidationError("working_directory must not contain '..'");
+      }
+    }
+    if (props.env) {
+      for (const [k, v] of Object.entries(props.env)) {
+        if (!ENV_KEY_RE.test(k)) {
+          throw new ValidationError(
+            `env var name "${k}" is invalid (must match ${ENV_KEY_RE})`,
+          );
+        }
+        if (v.includes("\n")) {
+          throw new ValidationError(
+            `env var "${k}" value contains a newline`,
+          );
+        }
+      }
+    }
+    // claude_args go through spawn argv, so there is no shell injection
+    // surface — but newlines / null bytes can confuse downstream tooling and
+    // are never useful flag values.
+    for (const arg of props.claudeArgs) {
+      if (arg.includes("\n") || arg.includes("\0")) {
+        throw new ValidationError("claude_args must not contain newlines or NUL");
+      }
     }
     return new Job(props);
   }

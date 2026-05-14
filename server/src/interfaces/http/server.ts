@@ -11,8 +11,25 @@ import { runsRoutes } from "./routes/runs.js";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const WEB_DIST = path.resolve(here, "..", "..", "..", "..", "web", "dist");
 
-export function buildApp(c: Composition): Hono {
+export type AppOptions = {
+  // Hostnames (with port) that are accepted in the Host request header.
+  // Used to defeat DNS rebinding when binding to loopback.
+  allowedHosts: string[];
+};
+
+export function buildApp(c: Composition, opts: AppOptions): Hono {
   const app = new Hono();
+  const allowed = new Set(opts.allowedHosts.map((h) => h.toLowerCase()));
+
+  // Host-header allowlist. Rejects DNS-rebinding attempts where a malicious
+  // site resolves a hostname to 127.0.0.1 to bypass same-origin policy.
+  app.use("*", async (ctx, next) => {
+    const host = (ctx.req.header("host") ?? "").toLowerCase();
+    if (!allowed.has(host)) {
+      return ctx.json({ error: "forbidden host" }, 403);
+    }
+    return next();
+  });
 
   app.get("/api/health", (ctx) =>
     ctx.json({ ok: true, time: new Date().toISOString() }),

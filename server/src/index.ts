@@ -13,11 +13,25 @@ if (process.platform !== "darwin") {
   process.exit(1);
 }
 
-const composition = compose();
-const app = buildApp(composition);
-
 const port = Number(process.env.PORT ?? 7878);
 const host = process.env.HOST ?? "127.0.0.1";
+
+const composition = compose();
+const app = buildApp(composition, {
+  // Match the bound host plus the universal loopback aliases. The optional
+  // CLAUDE_SCHEDULE_EXTRA_HOSTS env (comma-separated) lets advanced users
+  // permit additional names (e.g. a reverse-proxy hostname).
+  allowedHosts: [
+    `${host}:${port}`,
+    `localhost:${port}`,
+    `127.0.0.1:${port}`,
+    `[::1]:${port}`,
+    ...(process.env.CLAUDE_SCHEDULE_EXTRA_HOSTS ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  ],
+});
 
 serve({ fetch: app.fetch, port, hostname: host });
 console.log(`claude-schedule-management server listening on http://${host}:${port}`);

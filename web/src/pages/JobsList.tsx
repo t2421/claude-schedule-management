@@ -52,6 +52,7 @@ export function JobsList() {
   }
 
   async function removeOrphan(label: string) {
+    if (!confirm(t("orphans.removeConfirm", { label }))) return;
     setBusy(label);
     try {
       await api.removeOrphan(label);

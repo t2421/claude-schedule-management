@@ -51,7 +51,8 @@
     },
     "action": {
       "remove": "アンロードして削除"
-    }
+    },
+    "removeConfirm": "孤立ジョブ「{{label}}」をアンロードして削除しますか？ ~/Library/LaunchAgents の plist も削除されます。"
   },
   "edit": {
     "newTitle": "ジョブを作成",

@@ -51,7 +51,8 @@
     },
     "action": {
       "remove": "Unload & remove"
-    }
+    },
+    "removeConfirm": "Unload and remove orphan \"{{label}}\"? This deletes its plist from ~/Library/LaunchAgents."
   },
   "edit": {
     "newTitle": "New job",

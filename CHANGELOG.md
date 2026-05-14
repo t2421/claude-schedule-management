@@ -21,5 +21,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Orphan detection: surfaces launchd entries that have no YAML counterpart.
 - i18n: English (default) and Japanese.
 - MIT license, security policy, contributor docs.
-- `bin/personalize.sh` — one-shot interactive script to rewrite GitHub
-  URLs, LICENSE copyright, and `package.json` author for a fork.

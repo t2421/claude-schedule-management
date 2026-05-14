@@ -51,22 +51,10 @@ bin/doctor.sh
 ```bash
 git clone https://github.com/REPLACE_ME/claude-schedule-management.git
 cd claude-schedule-management
-bin/personalize.sh   # GitHub URL / LICENSE / author を一括書き換え（任意）
 npm install
 npm run build
 bin/install-service.sh
 open http://127.0.0.1:7878
-```
-
-`bin/personalize.sh` は対話式で、`package.json` / `README.md` /
-`README.ja.md` / `LICENSE` のプレースホルダーを置換します。手元で
-試すだけなら不要、フォークを公開する前に一度実行する想定。
-非対話モードもサポート:
-
-```bash
-GITHUB_USER=alice REPO_NAME=my-fork \
-  AUTHOR_NAME="Alice Doe" AUTHOR_EMAIL=alice@example.com \
-  CONFIRM_YES=1 bin/personalize.sh
 ```
 
 `install-service.sh` は `~/Library/LaunchAgents/local.claude-schedule.service.plist`

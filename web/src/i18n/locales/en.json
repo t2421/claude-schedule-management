@@ -74,7 +74,7 @@
       "prompt": "Prompt",
       "promptPlaceholder": "What you want Claude to do",
       "claudeArgs": "claude_args",
-      "claudeArgsHint": "space separated; default: -p",
+      "claudeArgsHint": "space separated, double-quote values with spaces; default allows git push",
       "permissionPreset": {
         "placeholder": "Permission preset...",
         "selected": "Permission preset",

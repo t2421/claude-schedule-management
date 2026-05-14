@@ -5,6 +5,35 @@ import { api, type Job } from "../api";
 
 type Props = { mode: "new" | "edit" };
 
+// Allow `git push` out of the box. Scheduled jobs run without a TTY, so any
+// permission prompt would hang the run; pre-authorizing the most common
+// repo-mutating command keeps the default useful without going full bypass.
+const DEFAULT_CLAUDE_ARGS: readonly string[] = [
+  "-p",
+  "--allowedTools",
+  "Bash(git push:*)",
+];
+
+// argsText <-> string[] round-trip with double/single-quote support so that
+// rules containing spaces (e.g. `Bash(git push:*)`) survive editing.
+function parseArgsText(text: string): string[] {
+  const out: string[] = [];
+  const re = /"([^"]*)"|'([^']*)'|(\S+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    out.push(m[1] ?? m[2] ?? m[3] ?? "");
+  }
+  return out;
+}
+
+function formatArgs(args: readonly string[]): string {
+  return args
+    .map((a) => (/\s|"/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a))
+    .join(" ");
+}
+
+const DEFAULT_ARGS_TEXT = formatArgs(DEFAULT_CLAUDE_ARGS);
+
 const EMPTY: Job = {
   name: "",
   description: "",
@@ -12,7 +41,7 @@ const EMPTY: Job = {
   schedule: { cron: "0 9 * * *" },
   working_directory: "",
   prompt: "",
-  claude_args: ["-p"],
+  claude_args: [...DEFAULT_CLAUDE_ARGS],
 };
 
 const PRESET_DEFS: { key: string; value: string }[] = [
@@ -48,7 +77,7 @@ export function JobEdit({ mode }: Props) {
   const [saving, setSaving] = useState(false);
   const [picking, setPicking] = useState(false);
   const [envText, setEnvText] = useState("");
-  const [argsText, setArgsText] = useState("-p");
+  const [argsText, setArgsText] = useState(DEFAULT_ARGS_TEXT);
 
   const presets = useMemo(
     () =>
@@ -78,7 +107,7 @@ export function JobEdit({ mode }: Props) {
                   .join("\n")
               : "",
           );
-          setArgsText((job.claude_args ?? ["-p"]).join(" "));
+          setArgsText(formatArgs(job.claude_args ?? DEFAULT_CLAUDE_ARGS));
         })
         .catch((e) => setErr((e as Error).message));
     }
@@ -117,7 +146,9 @@ export function JobEdit({ mode }: Props) {
         if (i < 0) throw new Error(`invalid env line: ${s}`);
         parsedEnv[s.slice(0, i)] = s.slice(i + 1);
       }
-      const parsedArgs = argsText.trim() ? argsText.trim().split(/\s+/) : ["-p"];
+      const parsedArgs = argsText.trim()
+        ? parseArgsText(argsText.trim())
+        : [...DEFAULT_CLAUDE_ARGS];
       const payload: Job = {
         ...job,
         env: Object.keys(parsedEnv).length ? parsedEnv : undefined,

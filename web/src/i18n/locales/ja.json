@@ -74,7 +74,7 @@
       "prompt": "プロンプト",
       "promptPlaceholder": "Claude にやってもらいたいこと",
       "claudeArgs": "claude_args",
-      "claudeArgsHint": "空白区切り、デフォルト: -p",
+      "claudeArgsHint": "空白区切り（空白を含む値はダブルクォートで囲む）、デフォルトで git push を許可",
       "permissionPreset": {
         "placeholder": "Permission preset を選ぶ...",
         "selected": "Permission preset",

@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Server reorganized into domain / application / infrastructure / interfaces
+  layers (DDD + Clean Architecture). The domain layer is pure TypeScript with
+  no `node:*` imports; infrastructure implements domain interfaces; use cases
+  are factory functions that receive their dependencies; a single
+  `composition.ts` wires everything. Public HTTP API is unchanged.
+- Added value objects: `JobName`, `CronSchedule`. Validation is centralized in
+  the domain rather than scattered across server modules.
+- Added unit tests for `JobName` and `CronSchedule` (cron parser test moved to
+  its new location).
+
+
+
 - Orphan detection no longer requires the launchd label to start with the
   current `LABEL_PREFIX`. It identifies orphans by inspecting plist contents
   (does `ProgramArguments[0]` equal our `bin/runner.sh`?), which lets the UI

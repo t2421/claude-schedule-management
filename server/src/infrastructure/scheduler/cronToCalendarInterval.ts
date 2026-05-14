@@ -1,15 +1,6 @@
-// Convert a 5-field cron expression into launchd StartCalendarInterval entries.
-//
-// Supported per field:
-//   *          → wildcard (key omitted)
-//   N          → exact value
-//   A,B,C      → list (cross-product across fields)
-//   A-B        → inclusive range
-//   *\/N        → every Nth starting at the min of the field
-//
-// Fields: minute(0-59) hour(0-23) dom(1-31) month(1-12) dow(0-6, 0=Sun)
+import { ValidationError } from "../../domain/errors.js";
 
-type CalEntry = {
+export type CalendarInterval = {
   Minute?: number;
   Hour?: number;
   Day?: number;
@@ -27,10 +18,7 @@ const RANGES = {
   dow: [0, 6],
 } as const;
 
-function parseField(
-  raw: string,
-  kind: keyof typeof RANGES,
-): FieldSpec {
+function parseField(raw: string, kind: keyof typeof RANGES): FieldSpec {
   const [min, max] = RANGES[kind];
   raw = raw.trim();
   if (raw === "*") return { wildcard: true, values: [] };
@@ -39,7 +27,7 @@ function parseField(
   if (stepMatch) {
     const step = Number(stepMatch[1]);
     if (!Number.isInteger(step) || step <= 0) {
-      throw new Error(`invalid step in ${kind}: ${raw}`);
+      throw new ValidationError(`invalid step in ${kind}: ${raw}`);
     }
     const values: number[] = [];
     for (let v = min; v <= max; v += step) values.push(v);
@@ -52,12 +40,12 @@ function parseField(
     if (range) {
       const a = Number(range[1]);
       const b = Number(range[2]);
-      if (a > b) throw new Error(`invalid range in ${kind}: ${part}`);
+      if (a > b) throw new ValidationError(`invalid range in ${kind}: ${part}`);
       for (let v = a; v <= b; v++) values.push(v);
     } else {
       const n = Number(part);
       if (!Number.isInteger(n)) {
-        throw new Error(`invalid value in ${kind}: ${part}`);
+        throw new ValidationError(`invalid value in ${kind}: ${part}`);
       }
       values.push(n);
     }
@@ -65,16 +53,21 @@ function parseField(
 
   for (const v of values) {
     if (v < min || v > max) {
-      throw new Error(`${kind} value ${v} out of range ${min}-${max}`);
+      throw new ValidationError(`${kind} value ${v} out of range ${min}-${max}`);
     }
   }
-  return { wildcard: false, values: [...new Set(values)].sort((a, b) => a - b) };
+  return {
+    wildcard: false,
+    values: [...new Set(values)].sort((a, b) => a - b),
+  };
 }
 
-export function cronToCalendarIntervals(cron: string): CalEntry[] {
+// Convert a 5-field cron expression to an array of launchd-compatible
+// StartCalendarInterval entries.
+export function cronToCalendarIntervals(cron: string): CalendarInterval[] {
   const fields = cron.trim().split(/\s+/);
   if (fields.length !== 5) {
-    throw new Error(
+    throw new ValidationError(
       `cron must have 5 fields (minute hour dom month dow); got: "${cron}"`,
     );
   }
@@ -85,8 +78,7 @@ export function cronToCalendarIntervals(cron: string): CalEntry[] {
   const month = parseField(mon, "month");
   const weekday = parseField(dow, "dow");
 
-  // Cross product. Wildcard fields contribute [undefined] to skip.
-  const dims: { key: keyof CalEntry; values: (number | undefined)[] }[] = [
+  const dims: { key: keyof CalendarInterval; values: (number | undefined)[] }[] = [
     { key: "Minute", values: minute.wildcard ? [undefined] : minute.values },
     { key: "Hour", values: hour.wildcard ? [undefined] : hour.values },
     { key: "Day", values: day.wildcard ? [undefined] : day.values },
@@ -94,12 +86,12 @@ export function cronToCalendarIntervals(cron: string): CalEntry[] {
     { key: "Weekday", values: weekday.wildcard ? [undefined] : weekday.values },
   ];
 
-  let acc: CalEntry[] = [{}];
+  let acc: CalendarInterval[] = [{}];
   for (const { key, values } of dims) {
-    const next: CalEntry[] = [];
+    const next: CalendarInterval[] = [];
     for (const e of acc) {
       for (const v of values) {
-        const copy: CalEntry = { ...e };
+        const copy: CalendarInterval = { ...e };
         if (v !== undefined) copy[key] = v;
         next.push(copy);
       }
@@ -107,9 +99,10 @@ export function cronToCalendarIntervals(cron: string): CalEntry[] {
     acc = next;
   }
 
-  // Edge: "* * * * *" → single empty dict (launchd interprets as every minute)
+  // "* * * * *" collapses to a single empty dict, which launchd interprets as
+  // "never". Expand to every minute to preserve the user's intent.
   if (acc.length === 1 && Object.keys(acc[0]).length === 0) {
-    return [{ Minute: 0 }, ...Array.from({ length: 59 }, (_, i) => ({ Minute: i + 1 }))];
+    return Array.from({ length: 60 }, (_, i) => ({ Minute: i }));
   }
   return acc;
 }

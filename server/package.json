@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "node --import tsx --test src/lib/cron-to-cal.test.ts"
+    "test": "node --import tsx --test src/infrastructure/scheduler/cronToCalendarInterval.test.ts src/domain/job/JobName.test.ts src/domain/job/CronSchedule.test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

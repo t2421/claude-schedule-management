@@ -25,14 +25,8 @@
     "agent"
   ],
   "engines": {
-    "node": ">=20",
-    "os": [
-      "darwin"
-    ]
+    "node": ">=20"
   },
-  "os": [
-    "darwin"
-  ],
   "workspaces": [
     "server",
     "web"

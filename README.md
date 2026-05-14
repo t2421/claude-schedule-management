@@ -50,7 +50,7 @@ bin/doctor.sh
 ## Install
 
 ```bash
-git clone https://github.com/REPLACE_ME/claude-schedule-management.git
+git clone https://github.com/t2421/claude-schedule-management.git
 cd claude-schedule-management
 npm install
 npm run build

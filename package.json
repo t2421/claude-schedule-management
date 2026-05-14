@@ -1,0 +1,61 @@
+{
+  "name": "claude-schedule-management",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser-based UI for scheduling Claude Code prompts as launchd jobs on macOS.",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://github.com/REPLACE_ME/claude-schedule-management#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/REPLACE_ME/claude-schedule-management.git"
+  },
+  "bugs": {
+    "url": "https://github.com/REPLACE_ME/claude-schedule-management/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "scheduler",
+    "cron",
+    "launchd",
+    "macos",
+    "automation",
+    "agent"
+  ],
+  "engines": {
+    "node": ">=20",
+    "os": [
+      "darwin"
+    ]
+  },
+  "os": [
+    "darwin"
+  ],
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm-run-all -p dev:server dev:web",
+    "dev:server": "npm --workspace server run dev",
+    "dev:web": "npm --workspace web run dev",
+    "build": "npm --workspace web run build && npm --workspace server run build",
+    "start": "npm --workspace server run start",
+    "test": "npm --workspace server run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.4.2"
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "all",
+    "singleQuote": false,
+    "printWidth": 88,
+    "tabWidth": 2,
+    "endOfLine": "lf"
+  }
+}

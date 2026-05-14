@@ -1,0 +1,15 @@
+# Weekly maintenance pass on Mondays at 10:00.
+name: weekly-cleanup
+description: Weekly repo cleanup
+enabled: true
+schedule:
+  cron: "0 10 * * 1"   # Mondays at 10:00
+working_directory: /Users/CHANGE_ME/projects/your-project
+prompt: |
+  Audit this repo for:
+    - stale branches that haven't been touched in 30+ days
+    - TODO / FIXME comments older than a month
+    - dependencies with major version updates available
+  Write a short report and save it to ./reports/weekly-YYYY-MM-DD.md.
+claude_args: ["-p"]
+timeout_seconds: 1200

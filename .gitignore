@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.local
+
+# generated artifacts
+plists/*.plist
+logs/
+
+# user-created job YAMLs (templates in jobs/examples/ are committed)
+jobs/*.yaml
+jobs/*.yml
+
+# but keep placeholder directories
+!plists/.gitkeep
+!logs/.gitkeep

@@ -1,0 +1,19 @@
+# Daily morning review of one project.
+# Copy this file to jobs/daily-review.yaml, edit the paths and prompt,
+# then save through the web UI (or run bin/install-service.sh once
+# more if you edited the YAML directly).
+name: daily-review
+description: Daily morning review at 9:00
+enabled: true
+schedule:
+  cron: "0 9 * * *"   # 9:00 every day
+working_directory: /Users/CHANGE_ME/projects/your-project
+prompt: |
+  Look at what changed in this repo since yesterday morning.
+  Summarize:
+    - What was completed
+    - What is in progress
+    - What looks stuck or blocked
+  Then propose the top 3 things to focus on today.
+claude_args: ["-p"]
+timeout_seconds: 600

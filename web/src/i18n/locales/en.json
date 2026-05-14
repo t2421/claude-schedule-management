@@ -1,0 +1,99 @@
+{
+  "app": {
+    "title": "Claude Schedule"
+  },
+  "nav": {
+    "jobs": "Jobs",
+    "newJob": "New job",
+    "language": "Language"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveAndApply": "Save & apply",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "browse": "Browse...",
+    "empty": "(empty)",
+    "deleteConfirm": "Delete job \"{{name}}\"?"
+  },
+  "jobs": {
+    "title": "Jobs",
+    "empty": "No jobs yet.",
+    "emptyCreate": "Create one",
+    "col": {
+      "name": "Name",
+      "schedule": "Schedule",
+      "status": "Status",
+      "lastExit": "Last exit",
+      "pid": "PID",
+      "actions": "Actions"
+    },
+    "status": {
+      "disabled": "disabled",
+      "loaded": "loaded",
+      "notLoaded": "not loaded"
+    },
+    "action": {
+      "runNow": "Run now",
+      "logs": "Logs"
+    }
+  },
+  "orphans": {
+    "title": "Orphans",
+    "subtitle": "(loaded in launchd but no YAML)",
+    "action": {
+      "remove": "Unload & remove"
+    }
+  },
+  "edit": {
+    "newTitle": "New job",
+    "editTitle": "Edit: {{name}}",
+    "field": {
+      "name": "Name",
+      "nameHint": "lowercase, dashes; immutable after create",
+      "namePlaceholder": "daily-review",
+      "description": "Description",
+      "descriptionPlaceholder": "Daily morning review",
+      "schedule": "Schedule",
+      "schedulePlaceholder": "0 9 * * *",
+      "scheduleHint": "min hour dom month dow (pick a preset or edit freely)",
+      "presetPlaceholder": "Choose preset...",
+      "presetSelected": "Preset",
+      "enabled": "Enabled",
+      "workdir": "Working directory",
+      "workdirPlaceholder": "/Users/you/projects/foo",
+      "prompt": "Prompt",
+      "promptPlaceholder": "What you want Claude to do",
+      "claudeArgs": "claude_args",
+      "claudeArgsHint": "space separated; default: -p",
+      "timeout": "timeout_seconds",
+      "timeoutPlaceholder": "600",
+      "env": "Env vars",
+      "envHint": "KEY=VALUE per line",
+      "envPlaceholder": "FOO=bar"
+    }
+  },
+  "logs": {
+    "breadcrumb": "logs",
+    "empty": "No logs yet for {{name}}.",
+    "autoRefresh": "Auto refresh",
+    "sizeKB": "{{size}} KB"
+  },
+  "presets": {
+    "everyMinute": "Every minute",
+    "every5Minutes": "Every 5 minutes",
+    "every15Minutes": "Every 15 minutes",
+    "every30Minutes": "Every 30 minutes",
+    "hourly": "Hourly (on the hour)",
+    "daily9": "Daily at 9:00",
+    "daily12": "Daily at 12:00",
+    "daily18": "Daily at 18:00",
+    "daily0": "Daily at 0:00",
+    "weekday9": "Weekdays at 9:00",
+    "monday9": "Mondays at 9:00",
+    "monthly1": "1st of every month at 0:00"
+  }
+}

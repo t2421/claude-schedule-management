@@ -1,0 +1,99 @@
+{
+  "app": {
+    "title": "Claude Schedule"
+  },
+  "nav": {
+    "jobs": "ジョブ",
+    "newJob": "新規作成",
+    "language": "言語"
+  },
+  "common": {
+    "cancel": "キャンセル",
+    "save": "保存",
+    "saving": "保存中...",
+    "saveAndApply": "保存して反映",
+    "delete": "削除",
+    "edit": "編集",
+    "loading": "読み込み中...",
+    "browse": "参照...",
+    "empty": "(空)",
+    "deleteConfirm": "ジョブ「{{name}}」を削除しますか？"
+  },
+  "jobs": {
+    "title": "ジョブ",
+    "empty": "ジョブはまだありません。",
+    "emptyCreate": "作成する",
+    "col": {
+      "name": "名前",
+      "schedule": "スケジュール",
+      "status": "状態",
+      "lastExit": "終了コード",
+      "pid": "PID",
+      "actions": "操作"
+    },
+    "status": {
+      "disabled": "無効",
+      "loaded": "読込済",
+      "notLoaded": "未読込"
+    },
+    "action": {
+      "runNow": "今すぐ実行",
+      "logs": "ログ"
+    }
+  },
+  "orphans": {
+    "title": "孤立ジョブ",
+    "subtitle": "(launchd に登録されているが YAML が無い)",
+    "action": {
+      "remove": "アンロードして削除"
+    }
+  },
+  "edit": {
+    "newTitle": "ジョブを作成",
+    "editTitle": "編集: {{name}}",
+    "field": {
+      "name": "名前",
+      "nameHint": "小文字とハイフン、作成後変更不可",
+      "namePlaceholder": "daily-review",
+      "description": "説明",
+      "descriptionPlaceholder": "毎朝のレビュー",
+      "schedule": "スケジュール",
+      "schedulePlaceholder": "0 9 * * *",
+      "scheduleHint": "分 時 日 月 曜（プリセットを選ぶか直接編集）",
+      "presetPlaceholder": "プリセットを選ぶ...",
+      "presetSelected": "プリセット",
+      "enabled": "有効",
+      "workdir": "作業ディレクトリ",
+      "workdirPlaceholder": "/Users/you/projects/foo",
+      "prompt": "プロンプト",
+      "promptPlaceholder": "Claude にやってもらいたいこと",
+      "claudeArgs": "claude_args",
+      "claudeArgsHint": "空白区切り、デフォルト: -p",
+      "timeout": "timeout_seconds",
+      "timeoutPlaceholder": "600",
+      "env": "環境変数",
+      "envHint": "1行ごとに KEY=VALUE",
+      "envPlaceholder": "FOO=bar"
+    }
+  },
+  "logs": {
+    "breadcrumb": "ログ",
+    "empty": "{{name}} のログはまだありません。",
+    "autoRefresh": "自動更新",
+    "sizeKB": "{{size}} KB"
+  },
+  "presets": {
+    "everyMinute": "毎分",
+    "every5Minutes": "5分毎",
+    "every15Minutes": "15分毎",
+    "every30Minutes": "30分毎",
+    "hourly": "1時間毎 (毎時 0分)",
+    "daily9": "毎日 9:00",
+    "daily12": "毎日 12:00",
+    "daily18": "毎日 18:00",
+    "daily0": "毎日 0:00",
+    "weekday9": "平日 9:00",
+    "monday9": "月曜 9:00",
+    "monthly1": "毎月1日 0:00"
+  }
+}

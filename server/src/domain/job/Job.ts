@@ -26,6 +26,11 @@ export class Job {
     if (!props.prompt.trim()) {
       throw new ValidationError("prompt is required");
     }
+    // PROMPT flows YAML → yq → bash argv → claude CLI. Bash strings are
+    // NUL-terminated, so a NUL byte would silently truncate the prompt.
+    if (props.prompt.includes("\0")) {
+      throw new ValidationError("prompt must not contain NUL bytes");
+    }
     if (props.timeoutSeconds !== undefined && props.timeoutSeconds < 0) {
       throw new ValidationError("timeout_seconds must be >= 0");
     }

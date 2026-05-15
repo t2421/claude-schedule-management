@@ -121,6 +121,16 @@ describe("YamlJobRepository", () => {
       assert.equal(found!.name.value, "alpha");
       assert.equal(found!.prompt, "do the thing");
     });
+
+    it("rethrows non-ENOENT errors (e.g. invalid yaml content)", async () => {
+      // Write valid YAML that fails Job.fromPlain (missing required prompt field).
+      await fs.writeFile(
+        path.join(dir, "alpha.yaml"),
+        YAML.stringify({ name: "alpha" }),
+        "utf8",
+      );
+      await assert.rejects(() => repo.find(JobName.parse("alpha")));
+    });
   });
 
   describe("save / find roundtrip", () => {
@@ -187,6 +197,13 @@ describe("YamlJobRepository", () => {
       // The .yml file is untouched.
       const stat = await fs.stat(ymlPath);
       assert.ok(stat.isFile());
+    });
+
+    it("rethrows non-ENOENT errors", async () => {
+      // A directory at the expected path makes fs.unlink throw EPERM/EISDIR,
+      // neither of which has code === "ENOENT", so the error must propagate.
+      await fs.mkdir(path.join(dir, "alpha.yaml"));
+      await assert.rejects(() => repo.delete(JobName.parse("alpha")));
     });
   });
 });

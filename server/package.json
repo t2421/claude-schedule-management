@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "node --import tsx --test src/infrastructure/scheduler/cronToCalendarInterval.test.ts src/infrastructure/scheduler/PlistBuilder.test.ts src/infrastructure/logs/FileLogReader.test.ts src/infrastructure/persistence/YamlJobRepository.test.ts src/domain/job/JobName.test.ts src/domain/job/CronSchedule.test.ts src/domain/job/Job.test.ts src/application/orphans/RemoveOrphanUseCase.test.ts src/interfaces/http/errorMapper.test.ts"
+    "test": "node --import tsx --test src/infrastructure/scheduler/cronToCalendarInterval.test.ts src/infrastructure/scheduler/PlistBuilder.test.ts src/infrastructure/logs/FileLogReader.test.ts src/infrastructure/persistence/YamlJobRepository.test.ts src/domain/job/JobName.test.ts src/domain/job/CronSchedule.test.ts src/domain/job/Job.test.ts src/application/orphans/RemoveOrphanUseCase.test.ts src/application/runs/KickstartJobUseCase.test.ts src/interfaces/http/errorMapper.test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

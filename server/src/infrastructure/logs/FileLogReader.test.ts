@@ -1,4 +1,4 @@
-import { describe, it, before, after } from "node:test";
+import { describe, it, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -84,5 +84,63 @@ describe("FileLogReader.read", () => {
       () => reader.read(name, "subdir/file.log"),
       ValidationError,
     );
+  });
+});
+
+describe("FileLogReader.list", () => {
+  const reader = new FileLogReader();
+  const LIST_NAME = "filelogreader-list-fixture";
+  const listDir = path.join(LOGS_DIR, LIST_NAME);
+  const listJobName = JobName.parse(LIST_NAME);
+
+  async function cleanDir() {
+    await fs.rm(listDir, { recursive: true, force: true });
+  }
+
+  beforeEach(cleanDir);
+  after(cleanDir);
+
+  it("returns empty array when log directory does not exist", async () => {
+    const result = await reader.list(listJobName);
+    assert.deepEqual(result, []);
+  });
+
+  it("returns empty array when directory contains no .log files", async () => {
+    await fs.mkdir(listDir, { recursive: true });
+    await fs.writeFile(path.join(listDir, "output.txt"), "nope");
+    const result = await reader.list(listJobName);
+    assert.deepEqual(result, []);
+  });
+
+  it("returns file, size, and ISO-8601 mtime for each .log file", async () => {
+    await fs.mkdir(listDir, { recursive: true });
+    await fs.writeFile(path.join(listDir, "run.log"), "hello");
+    const result = await reader.list(listJobName);
+    assert.equal(result.length, 1);
+    assert.equal(result[0].file, "run.log");
+    assert.equal(result[0].size, 5);
+    assert.match(result[0].mtime, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+  });
+
+  it("sorts newest file first (descending mtime)", async () => {
+    await fs.mkdir(listDir, { recursive: true });
+    const olderPath = path.join(listDir, "a-older.log");
+    const newerPath = path.join(listDir, "b-newer.log");
+    await fs.writeFile(olderPath, "old");
+    await fs.writeFile(newerPath, "new");
+    const nowSecs = Date.now() / 1000;
+    await fs.utimes(olderPath, nowSecs, nowSecs - 60);
+    await fs.utimes(newerPath, nowSecs, nowSecs);
+    const result = await reader.list(listJobName);
+    assert.equal(result.length, 2);
+    assert.equal(result[0].file, "b-newer.log");
+    assert.equal(result[1].file, "a-older.log");
+  });
+
+  it("re-throws errors other than ENOENT", async () => {
+    // Place a regular file at the path readdir expects to be a directory.
+    // readdir(file) yields ENOTDIR, which must propagate rather than be swallowed.
+    await fs.writeFile(listDir, "i am a file");
+    await assert.rejects(() => reader.list(listJobName), { code: "ENOTDIR" });
   });
 });

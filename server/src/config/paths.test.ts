@@ -43,15 +43,11 @@ describe("config/paths — constants", () => {
   });
 
   it("LABEL_PREFIX defaults to local.claude-schedule.job", () => {
-    if (!process.env.CLAUDE_SCHEDULE_LABEL_PREFIX) {
-      assert.equal(LABEL_PREFIX, "local.claude-schedule.job");
-    }
+    assert.equal(LABEL_PREFIX, "local.claude-schedule.job");
   });
 
   it("SERVICE_LABEL defaults to local.claude-schedule.service", () => {
-    if (!process.env.CLAUDE_SCHEDULE_SERVICE_LABEL) {
-      assert.equal(SERVICE_LABEL, "local.claude-schedule.service");
-    }
+    assert.equal(SERVICE_LABEL, "local.claude-schedule.service");
   });
 });
 

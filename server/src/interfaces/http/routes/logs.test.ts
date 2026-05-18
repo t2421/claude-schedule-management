@@ -4,6 +4,7 @@ import { logsRoutes } from "./logs.js";
 import type { Composition } from "../../../composition.js";
 import type { LogFile } from "../../../domain/logs/LogReader.js";
 import type { JobName } from "../../../domain/job/JobName.js";
+import { ValidationError } from "../../../domain/errors.js";
 
 function makeComposition(overrides: Partial<Composition["useCases"]> = {}): Composition {
   const defaults: Composition["useCases"] = {
@@ -168,6 +169,42 @@ describe("logsRoutes", () => {
       const res = await app.request("/daily-review/stdout.log", { method: "GET" });
 
       assert.equal(res.status, 500);
+    });
+
+    it("returns 400 when readLog throws ValidationError (e.g. invalid tailBytes)", async () => {
+      // NaN tailBytes (from ?tail=abc) propagates to FileLogReader.read which
+      // throws ValidationError — the route must map that to 400, not 500.
+      const app = logsRoutes(
+        makeComposition({
+          readLog: async () => {
+            throw new ValidationError("tailBytes must be a positive integer");
+          },
+        }),
+      );
+
+      const res = await app.request("/daily-review/stdout.log?tail=abc", { method: "GET" });
+
+      assert.equal(res.status, 400);
+    });
+
+    it("forwards NaN to readLog when tail param is non-numeric", async () => {
+      // The route converts the raw query string with Number(), so non-numeric
+      // strings become NaN rather than being rejected at the HTTP boundary.
+      // Downstream validation (FileLogReader) is responsible for rejecting NaN.
+      const captured: Array<number | undefined> = [];
+      const app = logsRoutes(
+        makeComposition({
+          readLog: async (_name, _file, tailBytes) => {
+            captured.push(tailBytes);
+            return "";
+          },
+        }),
+      );
+
+      await app.request("/daily-review/stdout.log?tail=abc", { method: "GET" });
+
+      assert.equal(captured.length, 1);
+      assert.ok(Number.isNaN(captured[0]), `expected NaN, got ${captured[0]}`);
     });
   });
 });

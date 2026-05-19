@@ -22,4 +22,8 @@ describe("CronSchedule", () => {
     assert.throws(() => CronSchedule.parse(""), ValidationError);
     assert.throws(() => CronSchedule.parse("   "), ValidationError);
   });
+
+  it("toString returns the expression", () => {
+    assert.equal(CronSchedule.parse("0 9 * * 1").toString(), "0 9 * * 1");
+  });
 });

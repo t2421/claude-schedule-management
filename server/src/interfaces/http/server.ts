@@ -52,11 +52,15 @@ export function buildApp(c: Composition, opts: AppOptions): Hono {
       ) {
         const ext = path.extname(candidate);
         const mime =
-          ext === ".js" ? "application/javascript" :
-          ext === ".css" ? "text/css" :
-          ext === ".html" ? "text/html" :
-          ext === ".svg" ? "image/svg+xml" :
-          "application/octet-stream";
+          ext === ".js"
+            ? "application/javascript"
+            : ext === ".css"
+              ? "text/css"
+              : ext === ".html"
+                ? "text/html"
+                : ext === ".svg"
+                  ? "image/svg+xml"
+                  : "application/octet-stream";
         return new Response(fs.readFileSync(candidate), {
           headers: { "content-type": mime },
         });

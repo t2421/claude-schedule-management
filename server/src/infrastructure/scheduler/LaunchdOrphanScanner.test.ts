@@ -20,8 +20,7 @@ type FsOps = {
 
 // A runner that reports an empty launchctl list (one-line header only)
 function emptyListRun(): RunFn {
-  return () =>
-    Promise.resolve({ code: 0, stdout: "PID\tStatus\tLabel", stderr: "" });
+  return () => Promise.resolve({ code: 0, stdout: "PID\tStatus\tLabel", stderr: "" });
 }
 
 // A runner that reports specific labels loaded in launchctl list
@@ -76,12 +75,7 @@ function makeFsOps(config: {
   unlinkErrors?: Record<string, NodeJS.ErrnoException>;
 }): FsOps & { unlinked: string[] } {
   const unlinked: string[] = [];
-  const {
-    agentsDir = [],
-    localDir = [],
-    fileContent = {},
-    unlinkErrors = {},
-  } = config;
+  const { agentsDir = [], localDir = [], fileContent = {}, unlinkErrors = {} } = config;
   return {
     unlinked,
     async readdir(dirPath: string): Promise<string[]> {

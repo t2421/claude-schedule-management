@@ -5,7 +5,9 @@ import { api, type JobWithStatus, type Orphan } from "../api";
 
 export function JobsList() {
   const { t } = useTranslation();
-  const [data, setData] = useState<{ jobs: JobWithStatus[]; orphans: Orphan[] } | null>(null);
+  const [data, setData] = useState<{ jobs: JobWithStatus[]; orphans: Orphan[] } | null>(
+    null,
+  );
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const nav = useNavigate();
@@ -170,10 +172,7 @@ export function JobsList() {
                 <tr key={o.label}>
                   <td className="mono">{o.label}</td>
                   <td className="mono" style={{ fontSize: 11 }}>
-                    {[
-                      o.inAgentsDir && "LaunchAgents",
-                      o.inLocalPlists && "plists/",
-                    ]
+                    {[o.inAgentsDir && "LaunchAgents", o.inLocalPlists && "plists/"]
                       .filter(Boolean)
                       .join(" + ") || "—"}
                   </td>

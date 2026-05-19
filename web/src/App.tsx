@@ -12,7 +12,9 @@ export function App() {
       <aside className="sidebar">
         <h1>{t("app.title")}</h1>
         <nav>
-          <NavLink to="/" end>{t("nav.jobs")}</NavLink>
+          <NavLink to="/" end>
+            {t("nav.jobs")}
+          </NavLink>
           <NavLink to="/new">{t("nav.newJob")}</NavLink>
         </nav>
         <div className="sidebar-footer">

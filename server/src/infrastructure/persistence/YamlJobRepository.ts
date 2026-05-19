@@ -15,9 +15,7 @@ export class YamlJobRepository implements JobRepository {
   async list(): Promise<Job[]> {
     await fs.mkdir(this.dir, { recursive: true });
     const entries = await fs.readdir(this.dir);
-    const yamls = entries.filter(
-      (f) => f.endsWith(".yaml") || f.endsWith(".yml"),
-    );
+    const yamls = entries.filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
     const jobs: Job[] = [];
     for (const file of yamls) {
       try {

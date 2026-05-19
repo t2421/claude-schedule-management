@@ -3,10 +3,7 @@ import os from "node:os";
 import { SchedulerError } from "../../domain/errors.js";
 import type { Job } from "../../domain/job/Job.js";
 import type { JobName } from "../../domain/job/JobName.js";
-import type {
-  JobStatus,
-  Scheduler,
-} from "../../domain/scheduler/Scheduler.js";
+import type { JobStatus, Scheduler } from "../../domain/scheduler/Scheduler.js";
 import {
   LABEL_PREFIX,
   LAUNCH_AGENTS_DIR,
@@ -60,9 +57,7 @@ export class LaunchdScheduler implements Scheduler {
     if (job.enabled) {
       const r = await this.runner("launchctl", ["bootstrap", gui(), linked]);
       if (r.code !== 0) {
-        throw new SchedulerError(
-          `launchctl bootstrap failed: ${r.stderr.trim()}`,
-        );
+        throw new SchedulerError(`launchctl bootstrap failed: ${r.stderr.trim()}`);
       }
     }
   }

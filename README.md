@@ -9,8 +9,8 @@ source of truth, the web UI just edits it.
 
 ## Screenshots
 
-| Jobs list | New / edit job | Log viewer |
-|---|---|---|
+| Jobs list                                       | New / edit job                                | Log viewer                                      |
+| ----------------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
 | ![Jobs list](docs/screenshots/01-jobs-list.png) | ![Edit form](docs/screenshots/02-job-new.png) | ![Log viewer](docs/screenshots/03-job-logs.png) |
 
 ```
@@ -113,7 +113,7 @@ name: daily-review
 description: Morning review of yesterday's work
 enabled: true
 schedule:
-  cron: "0 9 * * *"        # minute hour dom month dow
+  cron: "0 9 * * *" # minute hour dom month dow
 working_directory: /Users/you/projects/foo
 prompt: |
   Look at yesterday's progress and propose today's tasks.
@@ -131,12 +131,12 @@ Scheduled runs happen without a TTY. If the prompt triggers a tool that asks
 for permission, no one is there to answer — the job will either fail or hang.
 Pick one of these strategies and bake it into `claude_args`:
 
-| Strategy | `claude_args` | Risk | When |
-|---|---|---|---|
-| Plan only (safest) | `["-p", "--permission-mode", "plan"]` | Lowest | Read-only review / proposals |
-| Limited allowlist | `["-p", "--allowedTools", "Read,Grep,Glob"]` | Low | Inspect-a-repo style jobs |
-| Bypass permissions | `["-p", "--dangerously-skip-permissions"]` | High | Trusted automation with full FS / network access |
-| Per-project settings | `["-p"]` + a `.claude/settings.json` in the working dir with `permissions.allow` | Medium | Granular, project-tracked rules |
+| Strategy             | `claude_args`                                                                    | Risk   | When                                             |
+| -------------------- | -------------------------------------------------------------------------------- | ------ | ------------------------------------------------ |
+| Plan only (safest)   | `["-p", "--permission-mode", "plan"]`                                            | Lowest | Read-only review / proposals                     |
+| Limited allowlist    | `["-p", "--allowedTools", "Read,Grep,Glob"]`                                     | Low    | Inspect-a-repo style jobs                        |
+| Bypass permissions   | `["-p", "--dangerously-skip-permissions"]`                                       | High   | Trusted automation with full FS / network access |
+| Per-project settings | `["-p"]` + a `.claude/settings.json` in the working dir with `permissions.allow` | Medium | Granular, project-tracked rules                  |
 
 The UI offers these as presets next to the `claude_args` field. Always set
 `timeout_seconds` as a safety net — install GNU coreutils
@@ -146,13 +146,13 @@ The UI offers these as presets next to the `claude_args` field. Always set
 
 5-field (`minute hour dom month dow`):
 
-| Form | Meaning |
-|------|---------|
-| `*` | wildcard |
-| `N` | exact value |
-| `A,B,C` | list |
-| `A-B` | inclusive range |
-| `*/N` | step (e.g. `*/15`) |
+| Form    | Meaning            |
+| ------- | ------------------ |
+| `*`     | wildcard           |
+| `N`     | exact value        |
+| `A,B,C` | list               |
+| `A-B`   | inclusive range    |
+| `*/N`   | step (e.g. `*/15`) |
 
 Internally translated to launchd's `StartCalendarInterval` array.
 
@@ -162,11 +162,11 @@ Set via environment variables in
 `~/Library/LaunchAgents/local.claude-schedule.service.plist` (or for
 development, in your shell):
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `7878` | API port |
-| `HOST` | `127.0.0.1` | Bind address |
-| `CLAUDE_SCHEDULE_LABEL_PREFIX` | `local.claude-schedule.job` | launchd label prefix for jobs |
+| Variable                        | Default                         | Description                   |
+| ------------------------------- | ------------------------------- | ----------------------------- |
+| `PORT`                          | `7878`                          | API port                      |
+| `HOST`                          | `127.0.0.1`                     | Bind address                  |
+| `CLAUDE_SCHEDULE_LABEL_PREFIX`  | `local.claude-schedule.job`     | launchd label prefix for jobs |
 | `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service` | launchd label for the service |
 
 ## Project layout

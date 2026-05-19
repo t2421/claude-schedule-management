@@ -1,9 +1,6 @@
 import type { Job } from "../../domain/job/Job.js";
 import type { JobRepository } from "../../domain/job/JobRepository.js";
-import type {
-  JobStatus,
-  Scheduler,
-} from "../../domain/scheduler/Scheduler.js";
+import type { JobStatus, Scheduler } from "../../domain/scheduler/Scheduler.js";
 import type { Orphan } from "../../domain/scheduler/Orphan.js";
 import type { OrphanScanner } from "../../domain/scheduler/OrphanScanner.js";
 

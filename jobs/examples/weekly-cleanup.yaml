@@ -3,7 +3,7 @@ name: weekly-cleanup
 description: Weekly repo cleanup
 enabled: true
 schedule:
-  cron: "0 10 * * 1"   # Mondays at 10:00
+  cron: "0 10 * * 1" # Mondays at 10:00
 working_directory: /Users/CHANGE_ME/projects/your-project
 prompt: |
   Audit this repo for:

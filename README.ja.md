@@ -8,8 +8,8 @@
 
 ## スクリーンショット
 
-| ジョブ一覧 | 作成・編集フォーム | ログビューア |
-|---|---|---|
+| ジョブ一覧                                       | 作成・編集フォーム                               | ログビューア                                      |
+| ------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------- |
 | ![ジョブ一覧](docs/screenshots/01-jobs-list.png) | ![編集フォーム](docs/screenshots/02-job-new.png) | ![ログビューア](docs/screenshots/03-job-logs.png) |
 
 ```
@@ -107,7 +107,7 @@ name: daily-review
 description: 毎朝のレビュー
 enabled: true
 schedule:
-  cron: "0 9 * * *"        # 分 時 日 月 曜
+  cron: "0 9 * * *" # 分 時 日 月 曜
 working_directory: /Users/you/projects/foo
 prompt: |
   昨日の進捗を確認して、本日のタスクを提案してください。
@@ -124,12 +124,12 @@ timeout_seconds: 600
 スケジュール実行は TTY が無いため、プロンプトがツール許可を要求するとジョブは
 失敗するかハングします。次のどれかを `claude_args` に組み込んでください:
 
-| 戦略 | `claude_args` | リスク | 用途 |
-|---|---|---|---|
-| Plan のみ（最も安全） | `["-p", "--permission-mode", "plan"]` | 最低 | 読み取り専用のレビュー / 提案 |
-| 限定 allowlist | `["-p", "--allowedTools", "Read,Grep,Glob"]` | 低 | レポを覗くだけのジョブ |
-| 許可スキップ | `["-p", "--dangerously-skip-permissions"]` | 高 | フル権限が必要な信頼済み自動化 |
-| プロジェクト設定 | `["-p"]` + 作業ディレクトリ配下の `.claude/settings.json` に `permissions.allow` | 中 | プロジェクト単位で細かく制御 |
+| 戦略                  | `claude_args`                                                                    | リスク | 用途                           |
+| --------------------- | -------------------------------------------------------------------------------- | ------ | ------------------------------ |
+| Plan のみ（最も安全） | `["-p", "--permission-mode", "plan"]`                                            | 最低   | 読み取り専用のレビュー / 提案  |
+| 限定 allowlist        | `["-p", "--allowedTools", "Read,Grep,Glob"]`                                     | 低     | レポを覗くだけのジョブ         |
+| 許可スキップ          | `["-p", "--dangerously-skip-permissions"]`                                       | 高     | フル権限が必要な信頼済み自動化 |
+| プロジェクト設定      | `["-p"]` + 作業ディレクトリ配下の `.claude/settings.json` に `permissions.allow` | 中     | プロジェクト単位で細かく制御   |
 
 UI の `claude_args` フィールド横にプリセットを用意してあります。  
 必ず `timeout_seconds` を安全網として設定し、`brew install coreutils` を入れて
@@ -139,13 +139,13 @@ runner が `gtimeout` で殺せるようにしておくのを推奨。
 
 5 フィールド (`分 時 日 月 曜`):
 
-| 書き方 | 意味 |
-|------|---------|
-| `*` | wildcard |
-| `N` | ぴったり |
-| `A,B,C` | リスト |
-| `A-B` | 範囲 |
-| `*/N` | ステップ（例 `*/15`） |
+| 書き方  | 意味                  |
+| ------- | --------------------- |
+| `*`     | wildcard              |
+| `N`     | ぴったり              |
+| `A,B,C` | リスト                |
+| `A-B`   | 範囲                  |
+| `*/N`   | ステップ（例 `*/15`） |
 
 内部で launchd の `StartCalendarInterval` 配列に変換されます。
 
@@ -153,12 +153,12 @@ runner が `gtimeout` で殺せるようにしておくのを推奨。
 
 `~/Library/LaunchAgents/local.claude-schedule.service.plist` の環境変数で変更可能（開発時はシェルの環境変数）:
 
-| 変数 | デフォルト | 説明 |
-|----------|---------|-------------|
-| `PORT` | `7878` | API ポート |
-| `HOST` | `127.0.0.1` | bind アドレス |
-| `CLAUDE_SCHEDULE_LABEL_PREFIX` | `local.claude-schedule.job` | ジョブ用 launchd ラベル prefix |
-| `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service` | サービス自身の launchd ラベル |
+| 変数                            | デフォルト                      | 説明                           |
+| ------------------------------- | ------------------------------- | ------------------------------ |
+| `PORT`                          | `7878`                          | API ポート                     |
+| `HOST`                          | `127.0.0.1`                     | bind アドレス                  |
+| `CLAUDE_SCHEDULE_LABEL_PREFIX`  | `local.claude-schedule.job`     | ジョブ用 launchd ラベル prefix |
+| `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service` | サービス自身の launchd ラベル  |
 
 ## ディレクトリ
 

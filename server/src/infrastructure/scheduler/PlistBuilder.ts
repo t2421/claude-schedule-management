@@ -30,9 +30,15 @@ function escapeXml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function xstr(value: string): string { return `<string>${escapeXml(value)}</string>`; }
-function xint(value: number): string { return `<integer>${value}</integer>`; }
-function xbool(value: boolean): string { return value ? "<true/>" : "<false/>"; }
+function xstr(value: string): string {
+  return `<string>${escapeXml(value)}</string>`;
+}
+function xint(value: number): string {
+  return `<integer>${value}</integer>`;
+}
+function xbool(value: boolean): string {
+  return value ? "<true/>" : "<false/>";
+}
 
 function xdict(entries: Record<string, string>, indent = 2): string {
   const pad = " ".repeat(indent);

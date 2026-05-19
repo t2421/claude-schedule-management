@@ -46,8 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added unit tests for `JobName` and `CronSchedule` (cron parser test moved to
   its new location).
 
-
-
 - Orphan detection no longer requires the launchd label to start with the
   current `LABEL_PREFIX`. It identifies orphans by inspecting plist contents
   (does `ProgramArguments[0]` equal our `bin/runner.sh`?), which lets the UI

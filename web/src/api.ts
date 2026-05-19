@@ -44,10 +44,8 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  listJobs: () =>
-    http<{ jobs: JobWithStatus[]; orphans: Orphan[] }>("/jobs"),
-  getJob: (name: string) =>
-    http<{ job: Job; status: JobStatus }>(`/jobs/${name}`),
+  listJobs: () => http<{ jobs: JobWithStatus[]; orphans: Orphan[] }>("/jobs"),
+  getJob: (name: string) => http<{ job: Job; status: JobStatus }>(`/jobs/${name}`),
   saveJob: (name: string, job: Job) =>
     http<{ ok: boolean }>(`/jobs/${name}`, {
       method: "PUT",
@@ -66,8 +64,7 @@ export const api = {
     http<{ ok: boolean; error?: string }>(`/runs/${name}/kickstart`, {
       method: "POST",
     }),
-  listLogFiles: (name: string) =>
-    http<{ files: LogFile[] }>(`/logs/${name}`),
+  listLogFiles: (name: string) => http<{ files: LogFile[] }>(`/logs/${name}`),
   readLog: async (name: string, file: string, tail?: number) => {
     const q = tail ? `?tail=${tail}` : "";
     const res = await fetch(`${BASE}/logs/${name}/${file}${q}`);

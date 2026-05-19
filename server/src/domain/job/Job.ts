@@ -61,9 +61,7 @@ export class Job {
           );
         }
         if (v.includes("\n") || v.includes("\0")) {
-          throw new ValidationError(
-            `env var "${k}" value contains a newline or NUL`,
-          );
+          throw new ValidationError(`env var "${k}" value contains a newline or NUL`);
         }
       }
     }
@@ -78,17 +76,33 @@ export class Job {
     return new Job(props);
   }
 
-  get name(): JobName { return this.props.name; }
-  get description(): string | undefined { return this.props.description; }
-  get enabled(): boolean { return this.props.enabled; }
-  get schedule(): CronSchedule { return this.props.schedule; }
-  get workingDirectory(): string { return this.props.workingDirectory; }
-  get prompt(): string { return this.props.prompt; }
-  get claudeArgs(): string[] { return [...this.props.claudeArgs]; }
+  get name(): JobName {
+    return this.props.name;
+  }
+  get description(): string | undefined {
+    return this.props.description;
+  }
+  get enabled(): boolean {
+    return this.props.enabled;
+  }
+  get schedule(): CronSchedule {
+    return this.props.schedule;
+  }
+  get workingDirectory(): string {
+    return this.props.workingDirectory;
+  }
+  get prompt(): string {
+    return this.props.prompt;
+  }
+  get claudeArgs(): string[] {
+    return [...this.props.claudeArgs];
+  }
   get env(): Record<string, string> | undefined {
     return this.props.env ? { ...this.props.env } : undefined;
   }
-  get timeoutSeconds(): number | undefined { return this.props.timeoutSeconds; }
+  get timeoutSeconds(): number | undefined {
+    return this.props.timeoutSeconds;
+  }
 
   // Snake-cased plain object for serialization (YAML / HTTP body).
   toPlain() {
@@ -117,8 +131,7 @@ export class Job {
 
     return Job.create({
       name: JobName.parse(j.name),
-      description:
-        typeof j.description === "string" ? j.description : undefined,
+      description: typeof j.description === "string" ? j.description : undefined,
       enabled: j.enabled !== false,
       schedule: CronSchedule.parse(cronRaw),
       workingDirectory:
@@ -130,8 +143,8 @@ export class Job {
       env:
         j.env && typeof j.env === "object" && !Array.isArray(j.env)
           ? Object.fromEntries(
-              Object.entries(j.env as Record<string, unknown>).flatMap(
-                ([k, v]) => (typeof v === "string" ? [[k, v]] : []),
+              Object.entries(j.env as Record<string, unknown>).flatMap(([k, v]) =>
+                typeof v === "string" ? [[k, v]] : [],
               ),
             )
           : undefined,

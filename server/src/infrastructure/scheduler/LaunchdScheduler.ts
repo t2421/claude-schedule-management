@@ -19,6 +19,13 @@ import type { PlistBuilder } from "./PlistBuilder.js";
 
 type RunFn = (cmd: string, args: string[]) => Promise<RunResult>;
 
+export type FsOps = {
+  mkdir(path: string, opts: { recursive: boolean }): Promise<void>;
+  writeFile(path: string, content: string, encoding: BufferEncoding): Promise<void>;
+  unlink(path: string): Promise<void>;
+  symlink(target: string, path: string): Promise<void>;
+};
+
 function uid(): number {
   return os.userInfo().uid;
 }
@@ -29,29 +36,39 @@ function gui(): string {
 
 export class LaunchdScheduler implements Scheduler {
   private readonly runner: RunFn;
+  private readonly fsOps: FsOps;
 
   constructor(
     private readonly plistBuilder: PlistBuilder,
     runner?: RunFn,
+    fsOps?: FsOps,
   ) {
     this.runner = runner ?? run;
+    this.fsOps = fsOps ?? {
+      mkdir: async (p, opts) => {
+        await fs.mkdir(p, opts);
+      },
+      writeFile: (p, content, enc) => fs.writeFile(p, content, enc),
+      unlink: (p) => fs.unlink(p),
+      symlink: (target, p) => fs.symlink(target, p),
+    };
   }
 
   async apply(job: Job): Promise<void> {
-    await fs.mkdir(PLISTS_DIR, { recursive: true });
-    await fs.mkdir(LAUNCH_AGENTS_DIR, { recursive: true });
-    await fs.mkdir(jobLogsDir(job.name.value), { recursive: true });
+    await this.fsOps.mkdir(PLISTS_DIR, { recursive: true });
+    await this.fsOps.mkdir(LAUNCH_AGENTS_DIR, { recursive: true });
+    await this.fsOps.mkdir(jobLogsDir(job.name.value), { recursive: true });
 
     const generated = generatedPlistPath(job.name.value);
-    await fs.writeFile(generated, this.plistBuilder.build(job), "utf8");
+    await this.fsOps.writeFile(generated, this.plistBuilder.build(job), "utf8");
 
     const linked = linkedPlistPath(job.name.value);
     try {
-      await fs.unlink(linked);
+      await this.fsOps.unlink(linked);
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
-    await fs.symlink(generated, linked);
+    await this.fsOps.symlink(generated, linked);
 
     await this.runner("launchctl", ["bootout", gui(), linked]);
     if (job.enabled) {
@@ -66,12 +83,12 @@ export class LaunchdScheduler implements Scheduler {
     const linked = linkedPlistPath(name.value);
     await this.runner("launchctl", ["bootout", gui(), linked]);
     try {
-      await fs.unlink(linked);
+      await this.fsOps.unlink(linked);
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
     try {
-      await fs.unlink(generatedPlistPath(name.value));
+      await this.fsOps.unlink(generatedPlistPath(name.value));
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }

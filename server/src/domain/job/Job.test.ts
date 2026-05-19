@@ -36,6 +36,18 @@ describe("Job.fromPlain", () => {
     assert.equal(Job.fromPlain({ ...base, description: 99 }).description, undefined);
   });
 
+  it("defaults enabled to true when the field is absent", () => {
+    const { enabled: _e, ...withoutEnabled } = base;
+    assert.equal(Job.fromPlain(withoutEnabled).enabled, true);
+  });
+
+  it("treats only strict false as disabled (non-false values default to enabled)", () => {
+    assert.equal(Job.fromPlain({ ...base, enabled: null }).enabled, true);
+    assert.equal(Job.fromPlain({ ...base, enabled: 0 }).enabled, true);
+    assert.equal(Job.fromPlain({ ...base, enabled: "" }).enabled, true);
+    assert.equal(Job.fromPlain({ ...base, enabled: false }).enabled, false);
+  });
+
   it("preserves timeout_seconds when provided as a number", () => {
     const j = Job.fromPlain({ ...base, timeout_seconds: 300 });
     assert.equal(j.timeoutSeconds, 300);

@@ -102,4 +102,31 @@ describe("makeDeleteJob", () => {
 
     await assert.rejects(() => deleteJob(name), /disk write failed/);
   });
+
+  it("calls scheduler.unload before repo.delete (ordering invariant)", async () => {
+    const name = JobName.parse("daily-review");
+    const ops: string[] = [];
+    const repo: JobRepository = {
+      list: async () => [],
+      find: async () => null,
+      save: async () => {},
+      delete: async (n) => {
+        ops.push(`delete:${n.value}`);
+        return true;
+      },
+    };
+    const scheduler: Scheduler = {
+      apply: async () => {},
+      unload: async (n) => {
+        ops.push(`unload:${n.value}`);
+      },
+      kickstart: async () => {},
+      statuses: async () => new Map(),
+    };
+    const deleteJob = makeDeleteJob({ jobs: repo, scheduler });
+
+    await deleteJob(name);
+
+    assert.deepEqual(ops, ["unload:daily-review", "delete:daily-review"]);
+  });
 });

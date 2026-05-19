@@ -23,11 +23,11 @@ describe("OsascriptFolderPicker.pick", () => {
     assert.equal(await picker.pick(), "/Users/x/my-project");
   });
 
-  it("returns a single slash root path as-is", async () => {
+  it("returns root path '/' as-is without stripping", async () => {
     const picker = new OsascriptFolderPicker(
       makeRunner({ code: 0, stdout: "/\n", stderr: "" }),
     );
-    assert.equal(await picker.pick(), "");
+    assert.equal(await picker.pick(), "/");
   });
 
   it('throws PickerCancelledError when stderr contains "canceled" (US spelling)', async () => {

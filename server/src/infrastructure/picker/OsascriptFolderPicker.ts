@@ -16,7 +16,8 @@ export class OsascriptFolderPicker implements FolderPicker {
     const script = `POSIX path of (choose folder with prompt "Working directory")`;
     const r = await this.runner("osascript", ["-e", script]);
     if (r.code === 0) {
-      return r.stdout.trim().replace(/\/$/, "");
+      const p = r.stdout.trim();
+      return p === "/" ? "/" : p.replace(/\/$/, "");
     }
     if (/canceled|cancelled/i.test(r.stderr)) {
       throw new PickerCancelledError();

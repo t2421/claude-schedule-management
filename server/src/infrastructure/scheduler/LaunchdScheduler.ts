@@ -17,7 +17,10 @@ import {
   linkedPlistPath,
 } from "../../config/paths.js";
 import { run } from "../shell/processRunner.js";
+import type { RunResult } from "../shell/processRunner.js";
 import type { PlistBuilder } from "./PlistBuilder.js";
+
+type RunFn = (cmd: string, args: string[]) => Promise<RunResult>;
 
 function uid(): number {
   return os.userInfo().uid;
@@ -28,7 +31,14 @@ function gui(): string {
 }
 
 export class LaunchdScheduler implements Scheduler {
-  constructor(private readonly plistBuilder: PlistBuilder) {}
+  private readonly runner: RunFn;
+
+  constructor(
+    private readonly plistBuilder: PlistBuilder,
+    runner?: RunFn,
+  ) {
+    this.runner = runner ?? run;
+  }
 
   async apply(job: Job): Promise<void> {
     await fs.mkdir(PLISTS_DIR, { recursive: true });
@@ -46,9 +56,9 @@ export class LaunchdScheduler implements Scheduler {
     }
     await fs.symlink(generated, linked);
 
-    await run("launchctl", ["bootout", gui(), linked]);
+    await this.runner("launchctl", ["bootout", gui(), linked]);
     if (job.enabled) {
-      const r = await run("launchctl", ["bootstrap", gui(), linked]);
+      const r = await this.runner("launchctl", ["bootstrap", gui(), linked]);
       if (r.code !== 0) {
         throw new SchedulerError(
           `launchctl bootstrap failed: ${r.stderr.trim()}`,
@@ -59,7 +69,7 @@ export class LaunchdScheduler implements Scheduler {
 
   async unload(name: JobName): Promise<void> {
     const linked = linkedPlistPath(name.value);
-    await run("launchctl", ["bootout", gui(), linked]);
+    await this.runner("launchctl", ["bootout", gui(), linked]);
     try {
       await fs.unlink(linked);
     } catch (err) {
@@ -73,7 +83,7 @@ export class LaunchdScheduler implements Scheduler {
   }
 
   async kickstart(name: JobName): Promise<void> {
-    const r = await run("launchctl", [
+    const r = await this.runner("launchctl", [
       "kickstart",
       `${gui()}/${labelFor(name.value)}`,
     ]);
@@ -83,7 +93,7 @@ export class LaunchdScheduler implements Scheduler {
   }
 
   async statuses(): Promise<Map<string, JobStatus>> {
-    const r = await run("launchctl", ["list"]);
+    const r = await this.runner("launchctl", ["list"]);
     const out = new Map<string, JobStatus>();
     if (r.code !== 0) return out;
     const lines = r.stdout.split("\n").slice(1);

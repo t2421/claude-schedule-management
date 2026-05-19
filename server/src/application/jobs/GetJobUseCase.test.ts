@@ -112,4 +112,37 @@ describe("makeGetJob", () => {
       },
     );
   });
+
+  it("propagates errors from jobs.find", async () => {
+    const name = JobName.parse("any-job");
+    const repo: JobRepository = {
+      list: async () => [],
+      find: async () => {
+        throw new Error("disk read failed");
+      },
+      save: async () => {},
+      delete: async () => true,
+    };
+    const scheduler = makeScheduler(new Map());
+    const getJob = makeGetJob({ jobs: repo, scheduler });
+
+    await assert.rejects(() => getJob(name), /disk read failed/);
+  });
+
+  it("propagates errors from scheduler.statuses", async () => {
+    const name = JobName.parse("daily-review");
+    const job = makeJob("daily-review");
+    const repo = makeRepo(job);
+    const failScheduler: Scheduler = {
+      apply: async () => {},
+      unload: async () => {},
+      kickstart: async () => {},
+      statuses: async () => {
+        throw new Error("launchctl list failed");
+      },
+    };
+    const getJob = makeGetJob({ jobs: repo, scheduler: failScheduler });
+
+    await assert.rejects(() => getJob(name), /launchctl list failed/);
+  });
 });

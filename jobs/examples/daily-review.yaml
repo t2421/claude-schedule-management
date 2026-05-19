@@ -6,7 +6,7 @@ name: daily-review
 description: Daily morning review at 9:00
 enabled: true
 schedule:
-  cron: "0 9 * * *"   # 9:00 every day
+  cron: "0 9 * * *" # 9:00 every day
 working_directory: /Users/CHANGE_ME/projects/your-project
 prompt: |
   Look at what changed in this repo since yesterday morning.

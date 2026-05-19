@@ -5,10 +5,12 @@ import type { JobRepository } from "../../domain/job/JobRepository.js";
 import { JobName } from "../../domain/job/JobName.js";
 import type { Scheduler } from "../../domain/scheduler/Scheduler.js";
 
-function makeRepo(opts: {
-  deleteResult?: boolean;
-  deleteFn?: () => Promise<boolean>;
-} = {}): JobRepository & { unloadOrder: string[] } {
+function makeRepo(
+  opts: {
+    deleteResult?: boolean;
+    deleteFn?: () => Promise<boolean>;
+  } = {},
+): JobRepository & { unloadOrder: string[] } {
   const unloadOrder: string[] = [];
   return {
     unloadOrder,

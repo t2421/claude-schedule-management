@@ -6,11 +6,17 @@ import type { LogFile } from "../../../domain/logs/LogReader.js";
 import type { JobName } from "../../../domain/job/JobName.js";
 import { ValidationError } from "../../../domain/errors.js";
 
-function makeComposition(overrides: Partial<Composition["useCases"]> = {}): Composition {
+function makeComposition(
+  overrides: Partial<Composition["useCases"]> = {},
+): Composition {
   const defaults: Composition["useCases"] = {
     listJobs: async () => ({ jobs: [], orphans: [] }),
-    getJob: async () => { throw new Error("not implemented"); },
-    saveJob: async () => { throw new Error("not implemented"); },
+    getJob: async () => {
+      throw new Error("not implemented");
+    },
+    saveJob: async () => {
+      throw new Error("not implemented");
+    },
     deleteJob: async () => true,
     applyJob: async () => {},
     removeOrphan: async () => {},
@@ -26,7 +32,11 @@ describe("logsRoutes", () => {
   describe("GET /:name", () => {
     it("returns files list from listLogs", async () => {
       const logFiles: LogFile[] = [
-        { file: "stdout-2025-01-01.log", size: 1024, mtime: "2025-01-01T00:00:00.000Z" },
+        {
+          file: "stdout-2025-01-01.log",
+          size: 1024,
+          mtime: "2025-01-01T00:00:00.000Z",
+        },
         { file: "stderr-2025-01-01.log", size: 512, mtime: "2025-01-01T00:00:00.000Z" },
       ];
       const app = logsRoutes(
@@ -108,7 +118,9 @@ describe("logsRoutes", () => {
         }),
       );
 
-      const res = await app.request("/daily-review/stdout.log?tail=1024", { method: "GET" });
+      const res = await app.request("/daily-review/stdout.log?tail=1024", {
+        method: "GET",
+      });
 
       assert.equal(res.status, 200);
       assert.equal(captured.length, 1);
@@ -144,7 +156,9 @@ describe("logsRoutes", () => {
       const app = logsRoutes(
         makeComposition({
           readLog: async () => {
-            const e = Object.assign(new Error("ENOENT: no such file"), { code: "ENOENT" });
+            const e = Object.assign(new Error("ENOENT: no such file"), {
+              code: "ENOENT",
+            });
             throw e;
           },
         }),
@@ -182,7 +196,9 @@ describe("logsRoutes", () => {
         }),
       );
 
-      const res = await app.request("/daily-review/stdout.log?tail=abc", { method: "GET" });
+      const res = await app.request("/daily-review/stdout.log?tail=abc", {
+        method: "GET",
+      });
 
       assert.equal(res.status, 400);
     });

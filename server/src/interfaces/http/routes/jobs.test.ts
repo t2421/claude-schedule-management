@@ -24,7 +24,9 @@ function makeStatus(overrides: Partial<JobStatus> = {}): JobStatus {
   return { loaded: true, ...overrides };
 }
 
-function makeComposition(overrides: Partial<Composition["useCases"]> = {}): Composition {
+function makeComposition(
+  overrides: Partial<Composition["useCases"]> = {},
+): Composition {
   const defaults: Composition["useCases"] = {
     listJobs: async () => ({ jobs: [], orphans: [] }),
     getJob: async () => ({ job: makeJob(), status: makeStatus() }),
@@ -64,7 +66,10 @@ describe("jobsRoutes", () => {
       const res = await app.request("/", { method: "GET" });
 
       assert.equal(res.status, 200);
-      const body = (await res.json()) as { jobs: unknown[]; orphans: { label: string }[] };
+      const body = (await res.json()) as {
+        jobs: unknown[];
+        orphans: { label: string }[];
+      };
       assert.equal(body.jobs.length, 1);
       assert.equal(body.orphans.length, 1);
       assert.equal(body.orphans[0].label, "local.claude-schedule.job.stale");

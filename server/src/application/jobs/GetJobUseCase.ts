@@ -2,10 +2,7 @@ import { NotFoundError } from "../../domain/errors.js";
 import type { Job } from "../../domain/job/Job.js";
 import type { JobName } from "../../domain/job/JobName.js";
 import type { JobRepository } from "../../domain/job/JobRepository.js";
-import type {
-  JobStatus,
-  Scheduler,
-} from "../../domain/scheduler/Scheduler.js";
+import type { JobStatus, Scheduler } from "../../domain/scheduler/Scheduler.js";
 
 export type GetJobResult = { job: Job; status: JobStatus };
 

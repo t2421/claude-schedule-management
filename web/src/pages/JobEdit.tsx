@@ -51,8 +51,7 @@ export function JobEdit({ mode }: Props) {
   const [argsText, setArgsText] = useState("-p");
 
   const presets = useMemo(
-    () =>
-      PRESET_DEFS.map((p) => ({ label: t(`presets.${p.key}`), value: p.value })),
+    () => PRESET_DEFS.map((p) => ({ label: t(`presets.${p.key}`), value: p.value })),
     [t],
   );
 
@@ -137,8 +136,7 @@ export function JobEdit({ mode }: Props) {
     }
   }
 
-  const presetMatch =
-    presets.find((p) => p.value === job.schedule.cron)?.value ?? "";
+  const presetMatch = presets.find((p) => p.value === job.schedule.cron)?.value ?? "";
   const permissionPresetMatch =
     permissionPresets.find((p) => p.value === argsText.trim())?.value ?? "";
 

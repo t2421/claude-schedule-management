@@ -1,9 +1,9 @@
 # Hourly check of CI / deploy status during work hours on weekdays.
 name: hourly-monitor
 description: Hourly CI check during weekday hours
-enabled: false   # disabled by default — turn on after editing
+enabled: false # disabled by default — turn on after editing
 schedule:
-  cron: "0 9-18 * * 1-5"   # every hour from 9:00 to 18:00 on weekdays
+  cron: "0 9-18 * * 1-5" # every hour from 9:00 to 18:00 on weekdays
 working_directory: /Users/CHANGE_ME/projects/your-project
 prompt: |
   Check the status of recent CI runs and deploys for this project.

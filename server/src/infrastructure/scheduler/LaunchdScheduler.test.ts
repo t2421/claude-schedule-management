@@ -33,9 +33,7 @@ describe("LaunchdScheduler.statuses", () => {
   it("returns empty map when stdout has no matching labels", async () => {
     const sched = new LaunchdScheduler(
       stubPlist,
-      makeRunner(
-        launchctlList("- - com.apple.something\n- - com.apple.other"),
-      ),
+      makeRunner(launchctlList("- - com.apple.something\n- - com.apple.other")),
     );
     assert.deepEqual(await sched.statuses(), new Map());
   });
@@ -109,9 +107,7 @@ describe("LaunchdScheduler.kickstart", () => {
       stubPlist,
       makeRunner({ code: 0, stdout: "", stderr: "" }),
     );
-    await assert.doesNotReject(() =>
-      sched.kickstart(JobName.parse("daily-review")),
-    );
+    await assert.doesNotReject(() => sched.kickstart(JobName.parse("daily-review")));
   });
 
   it("throws SchedulerError with stderr message on non-zero exit", async () => {

@@ -157,9 +157,7 @@ export class LaunchdOrphanScanner implements OrphanScanner {
       }
     }
 
-    return Array.from(byLabel.values()).sort((a, b) =>
-      a.label.localeCompare(b.label),
-    );
+    return Array.from(byLabel.values()).sort((a, b) => a.label.localeCompare(b.label));
   }
 
   async removeByLabel(label: string): Promise<void> {

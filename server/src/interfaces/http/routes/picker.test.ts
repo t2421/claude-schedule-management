@@ -4,7 +4,9 @@ import { pickerRoutes } from "./picker.js";
 import { PickerCancelledError } from "../../../domain/errors.js";
 import type { Composition } from "../../../composition.js";
 
-function makeComposition(pickFolderFn: () => Promise<string> = async () => "/chosen/path"): Composition {
+function makeComposition(
+  pickFolderFn: () => Promise<string> = async () => "/chosen/path",
+): Composition {
   return { useCases: { pickFolder: pickFolderFn } } as unknown as Composition;
 }
 

@@ -15,9 +15,7 @@ export function run(cmd: string, args: string[]): Promise<RunResult> {
     let stderr = "";
     child.stdout.on("data", (d) => (stdout += d.toString()));
     child.stderr.on("data", (d) => (stderr += d.toString()));
-    child.on("close", (code) =>
-      resolve({ code: code ?? -1, stdout, stderr }),
-    );
+    child.on("close", (code) => resolve({ code: code ?? -1, stdout, stderr }));
     child.on("error", (err) =>
       resolve({ code: -1, stdout, stderr: stderr + err.message }),
     );

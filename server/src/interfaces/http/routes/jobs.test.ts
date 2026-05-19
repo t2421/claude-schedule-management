@@ -207,6 +207,33 @@ describe("jobsRoutes", () => {
 
       assert.equal(res.status, 500);
     });
+
+    it("URL path name overrides any name in the request body", async () => {
+      const payloads: unknown[] = [];
+      const app = jobsRoutes(
+        makeComposition({
+          saveJob: async (payload) => {
+            payloads.push(payload);
+            return makeJob("daily-review");
+          },
+        }),
+      );
+
+      await app.request("/daily-review", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: "attacker-chosen-name",
+          enabled: true,
+          schedule: { cron: "0 9 * * *" },
+          working_directory: "/home/user/project",
+          prompt: "Review the daily summary",
+        }),
+      });
+
+      const p = payloads[0] as Record<string, unknown>;
+      assert.equal(p.name, "daily-review");
+    });
   });
 
   describe("DELETE /:name", () => {
@@ -244,6 +271,20 @@ describe("jobsRoutes", () => {
       const res = await app.request("/missing", { method: "DELETE" });
 
       assert.equal(res.status, 404);
+    });
+
+    it("returns ok:false when job did not exist (deleteJob returns false)", async () => {
+      const app = jobsRoutes(
+        makeComposition({
+          deleteJob: async () => false,
+        }),
+      );
+
+      const res = await app.request("/ghost-job", { method: "DELETE" });
+
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as { ok: boolean };
+      assert.equal(body.ok, false);
     });
   });
 

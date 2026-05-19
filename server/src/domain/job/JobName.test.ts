@@ -22,4 +22,8 @@ describe("JobName", () => {
     assert.ok(JobName.parse("a").equals(JobName.parse("a")));
     assert.ok(!JobName.parse("a").equals(JobName.parse("b")));
   });
+
+  it("toString returns the value", () => {
+    assert.equal(JobName.parse("daily-review").toString(), "daily-review");
+  });
 });

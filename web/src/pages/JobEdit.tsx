@@ -2,6 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, type Job } from "../api";
+import {
+  buildCronFromBuilder,
+  DEFAULT_SCHEDULE_BUILDER,
+  parseBuilderFromCron,
+  type ScheduleBuilder,
+  WEEKDAY_ORDER,
+} from "../lib/scheduleBuilder";
 
 type Props = { mode: "new" | "edit" };
 
@@ -38,6 +45,7 @@ const PERMISSION_PRESETS: { key: string; value: string }[] = [
   { key: "allowedTools", value: "-p --allowedTools Read,Grep,Glob" },
   { key: "bypass", value: "-p --dangerously-skip-permissions" },
 ];
+
 
 export function JobEdit({ mode }: Props) {
   const { t } = useTranslation();
@@ -82,6 +90,17 @@ export function JobEdit({ mode }: Props) {
         .catch((e) => setErr((e as Error).message));
     }
   }, [mode, name]);
+
+  const parsedBuilder = useMemo(
+    () => parseBuilderFromCron(job.schedule.cron),
+    [job.schedule.cron],
+  );
+  const builderEditable = parsedBuilder !== null;
+  const scheduleBuilder = parsedBuilder ?? DEFAULT_SCHEDULE_BUILDER;
+
+  function applyBuilder(next: ScheduleBuilder) {
+    update("schedule", { cron: buildCronFromBuilder(next) });
+  }
 
   function update<K extends keyof Job>(k: K, v: Job[K]) {
     setJob((j) => ({ ...j, [k]: v }));
@@ -140,6 +159,16 @@ export function JobEdit({ mode }: Props) {
   const permissionPresetMatch =
     permissionPresets.find((p) => p.value === argsText.trim())?.value ?? "";
 
+  function toggleWeekday(day: number) {
+    const exists = scheduleBuilder.weekdays.includes(day);
+    // Keep at least one weekday so the cron stays valid.
+    if (exists && scheduleBuilder.weekdays.length === 1) return;
+    const weekdays = exists
+      ? scheduleBuilder.weekdays.filter((d) => d !== day)
+      : [...scheduleBuilder.weekdays, day].sort((a, b) => a - b);
+    applyBuilder({ ...scheduleBuilder, weekdays });
+  }
+
   return (
     <>
       <div className="h-row">
@@ -173,7 +202,9 @@ export function JobEdit({ mode }: Props) {
                 className="input-group-select"
                 value={presetMatch}
                 onChange={(e) => {
-                  if (e.target.value) update("schedule", { cron: e.target.value });
+                  if (e.target.value) {
+                    update("schedule", { cron: e.target.value });
+                  }
                 }}
               >
                 <option value="">
@@ -195,6 +226,106 @@ export function JobEdit({ mode }: Props) {
               />
             </div>
             <span className="cron-hint">{t("edit.field.scheduleHint")}</span>
+            <div className="schedule-builder">
+              {!builderEditable && (
+                <div className="schedule-builder-note">
+                  {t("edit.field.builder.unsupported")}
+                </div>
+              )}
+              <div className="schedule-builder-row">
+                <span className="schedule-builder-label">
+                  {t("edit.field.builder.weekdays")}
+                </span>
+                <div
+                  className="weekday-chips"
+                  role="group"
+                  aria-label={t("edit.field.builder.weekdays")}
+                >
+                  {WEEKDAY_ORDER.map((day) => {
+                    const active = scheduleBuilder.weekdays.includes(day);
+                    return (
+                      <button
+                        type="button"
+                        key={day}
+                        className={`weekday-chip${active ? " active" : ""}`}
+                        aria-pressed={active}
+                        disabled={!builderEditable}
+                        onClick={() => toggleWeekday(day)}
+                      >
+                        {t(`edit.field.builder.day.${day}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="schedule-builder-row schedule-builder-controls">
+                <label>
+                  {t("edit.field.builder.minute")}
+                  <select
+                    value={scheduleBuilder.minute}
+                    disabled={!builderEditable}
+                    onChange={(e) =>
+                      applyBuilder({
+                        ...scheduleBuilder,
+                        minute: Number(e.target.value),
+                      })
+                    }
+                  >
+                    {Array.from({ length: 60 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {String(i).padStart(2, "0")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t("edit.field.builder.startHour")}
+                  <select
+                    value={scheduleBuilder.startHour}
+                    disabled={!builderEditable}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      applyBuilder({
+                        ...scheduleBuilder,
+                        startHour: value,
+                        endHour:
+                          scheduleBuilder.endHour < value
+                            ? value
+                            : scheduleBuilder.endHour,
+                      });
+                    }}
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {String(i).padStart(2, "0")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t("edit.field.builder.endHour")}
+                  <select
+                    value={scheduleBuilder.endHour}
+                    disabled={!builderEditable}
+                    onChange={(e) =>
+                      applyBuilder({
+                        ...scheduleBuilder,
+                        endHour: Math.max(
+                          scheduleBuilder.startHour,
+                          Number(e.target.value),
+                        ),
+                      })
+                    }
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {String(i).padStart(2, "0")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
           </label>
           <label className="check">
             <input

@@ -37,7 +37,7 @@
     "dev:web": "npm --workspace web run dev",
     "build": "npm --workspace web run build && npm --workspace server run build",
     "start": "npm --workspace server run start",
-    "test": "npm --workspace server run test",
+    "test": "npm --workspace server run test && npm --workspace web run test",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

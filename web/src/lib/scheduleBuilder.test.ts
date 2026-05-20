@@ -110,6 +110,30 @@ describe("parseBuilderFromCron", () => {
   it("returns null for inverted hour range", () => {
     assert.equal(parseBuilderFromCron("0 18-9 * * *"), null);
   });
+
+  it("parses comma-separated weekdays", () => {
+    const b = parseBuilderFromCron("0 9 * * 1,3,5");
+    assert.ok(b);
+    assert.deepEqual(b.weekdays, [1, 3, 5]);
+    assert.equal(b.startHour, 9);
+  });
+
+  it("parses mixed range-and-single weekdays", () => {
+    const b = parseBuilderFromCron("0 9 * * 1,3-5");
+    assert.ok(b);
+    assert.deepEqual(b.weekdays, [1, 3, 4, 5]);
+  });
+
+  it("parses weekend-only schedule", () => {
+    const b = parseBuilderFromCron("0 10 * * 0,6");
+    assert.ok(b);
+    assert.deepEqual(b.weekdays, [0, 6]);
+    assert.equal(b.startHour, 10);
+  });
+
+  it("returns null for out-of-range hour (24)", () => {
+    assert.equal(parseBuilderFromCron("0 24 * * *"), null);
+  });
 });
 
 describe("buildCronFromBuilder", () => {
@@ -172,6 +196,46 @@ describe("buildCronFromBuilder", () => {
     });
     assert.equal(cron, "0 9 * * 1-2");
   });
+
+  it("builds non-contiguous weekdays as comma-separated", () => {
+    const cron = buildCronFromBuilder({
+      minute: 0,
+      startHour: 9,
+      endHour: 9,
+      weekdays: [1, 3, 5],
+    });
+    assert.equal(cron, "0 9 * * 1,3,5");
+  });
+
+  it("builds weekend-only cron with comma-separated sat/sun", () => {
+    const cron = buildCronFromBuilder({
+      minute: 0,
+      startHour: 10,
+      endHour: 10,
+      weekdays: [0, 6],
+    });
+    assert.equal(cron, "0 10 * * 0,6");
+  });
+
+  it("clamps startHour above 23 to 23", () => {
+    const cron = buildCronFromBuilder({
+      minute: 0,
+      startHour: 25,
+      endHour: 25,
+      weekdays: [1],
+    });
+    assert.equal(cron, "0 23 * * 1");
+  });
+
+  it("clamps negative minute to 0", () => {
+    const cron = buildCronFromBuilder({
+      minute: -5,
+      startHour: 9,
+      endHour: 9,
+      weekdays: [1],
+    });
+    assert.equal(cron, "0 9 * * 1");
+  });
 });
 
 describe("round-trip: preset strings survive parse → build unchanged", () => {
@@ -182,6 +246,8 @@ describe("round-trip: preset strings survive parse → build unchanged", () => {
     "0 0 * * *",
     "0 9 * * 1-5",
     "0 9 * * 1",
+    "0 9 * * 1,3,5",
+    "0 10 * * 0,6",
   ];
 
   for (const preset of presets) {

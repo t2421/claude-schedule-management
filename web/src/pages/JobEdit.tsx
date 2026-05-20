@@ -5,6 +5,13 @@ import { api, type Job } from "../api";
 
 type Props = { mode: "new" | "edit" };
 
+type ScheduleBuilder = {
+  minute: number;
+  startHour: number;
+  endHour: number;
+  weekdays: number[];
+};
+
 const EMPTY: Job = {
   name: "",
   description: "",
@@ -38,6 +45,83 @@ const PERMISSION_PRESETS: { key: string; value: string }[] = [
   { key: "allowedTools", value: "-p --allowedTools Read,Grep,Glob" },
   { key: "bypass", value: "-p --dangerously-skip-permissions" },
 ];
+
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
+
+const DEFAULT_SCHEDULE_BUILDER: ScheduleBuilder = {
+  minute: 0,
+  startHour: 9,
+  endHour: 18,
+  weekdays: [1, 2, 3, 4, 5],
+};
+
+function parseNumberList(raw: string, min: number, max: number): number[] | null {
+  const out: number[] = [];
+  for (const part of raw.split(",")) {
+    const s = part.trim();
+    if (!s) return null;
+    const range = s.match(/^(\d+)-(\d+)$/);
+    if (range) {
+      const a = Number(range[1]);
+      const b = Number(range[2]);
+      if (!Number.isInteger(a) || !Number.isInteger(b) || a > b) return null;
+      for (let v = a; v <= b; v++) out.push(v);
+      continue;
+    }
+    if (!/^\d+$/.test(s)) return null;
+    out.push(Number(s));
+  }
+  if (out.some((v) => v < min || v > max)) return null;
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+
+function parseBuilderFromCron(cron: string): ScheduleBuilder | null {
+  const fields = cron.trim().split(/\s+/);
+  if (fields.length !== 5) return null;
+  const [minuteRaw, hourRaw, dom, mon, dowRaw] = fields;
+  if (dom !== "*" || mon !== "*") return null;
+  if (!/^\d+$/.test(minuteRaw)) return null;
+  const minute = Number(minuteRaw);
+  if (minute < 0 || minute > 59) return null;
+
+  let startHour: number;
+  let endHour: number;
+  const hourRange = hourRaw.match(/^(\d+)-(\d+)$/);
+  if (hourRange) {
+    startHour = Number(hourRange[1]);
+    endHour = Number(hourRange[2]);
+  } else if (/^\d+$/.test(hourRaw)) {
+    startHour = Number(hourRaw);
+    endHour = Number(hourRaw);
+  } else {
+    return null;
+  }
+  if (
+    startHour < 0 ||
+    startHour > 23 ||
+    endHour < 0 ||
+    endHour > 23 ||
+    startHour > endHour
+  ) {
+    return null;
+  }
+
+  const weekdays = dowRaw === "*" ? [...WEEKDAY_ORDER] : parseNumberList(dowRaw, 0, 6);
+  if (!weekdays || weekdays.length === 0) return null;
+
+  return { minute, startHour, endHour, weekdays };
+}
+
+function buildCronFromBuilder(builder: ScheduleBuilder): string {
+  const minute = Math.max(0, Math.min(59, builder.minute));
+  const startHour = Math.max(0, Math.min(23, builder.startHour));
+  const endHour = Math.max(startHour, Math.min(23, builder.endHour));
+  const weekdays = [...new Set(builder.weekdays)].sort((a, b) => a - b);
+  const hourField =
+    startHour === endHour ? String(startHour) : `${startHour}-${endHour}`;
+  const dowField = weekdays.length ? weekdays.join(",") : "*";
+  return `${minute} ${hourField} * * ${dowField}`;
+}
 
 export function JobEdit({ mode }: Props) {
   const { t } = useTranslation();
@@ -82,6 +166,17 @@ export function JobEdit({ mode }: Props) {
         .catch((e) => setErr((e as Error).message));
     }
   }, [mode, name]);
+
+  const parsedBuilder = useMemo(
+    () => parseBuilderFromCron(job.schedule.cron),
+    [job.schedule.cron],
+  );
+  const builderEditable = parsedBuilder !== null;
+  const scheduleBuilder = parsedBuilder ?? DEFAULT_SCHEDULE_BUILDER;
+
+  function applyBuilder(next: ScheduleBuilder) {
+    update("schedule", { cron: buildCronFromBuilder(next) });
+  }
 
   function update<K extends keyof Job>(k: K, v: Job[K]) {
     setJob((j) => ({ ...j, [k]: v }));
@@ -140,6 +235,16 @@ export function JobEdit({ mode }: Props) {
   const permissionPresetMatch =
     permissionPresets.find((p) => p.value === argsText.trim())?.value ?? "";
 
+  function toggleWeekday(day: number) {
+    const exists = scheduleBuilder.weekdays.includes(day);
+    // Keep at least one weekday so the cron stays valid.
+    if (exists && scheduleBuilder.weekdays.length === 1) return;
+    const weekdays = exists
+      ? scheduleBuilder.weekdays.filter((d) => d !== day)
+      : [...scheduleBuilder.weekdays, day].sort((a, b) => a - b);
+    applyBuilder({ ...scheduleBuilder, weekdays });
+  }
+
   return (
     <>
       <div className="h-row">
@@ -173,7 +278,9 @@ export function JobEdit({ mode }: Props) {
                 className="input-group-select"
                 value={presetMatch}
                 onChange={(e) => {
-                  if (e.target.value) update("schedule", { cron: e.target.value });
+                  if (e.target.value) {
+                    update("schedule", { cron: e.target.value });
+                  }
                 }}
               >
                 <option value="">
@@ -195,6 +302,106 @@ export function JobEdit({ mode }: Props) {
               />
             </div>
             <span className="cron-hint">{t("edit.field.scheduleHint")}</span>
+            <div className="schedule-builder">
+              {!builderEditable && (
+                <div className="schedule-builder-note">
+                  {t("edit.field.builder.unsupported")}
+                </div>
+              )}
+              <div className="schedule-builder-row">
+                <span className="schedule-builder-label">
+                  {t("edit.field.builder.weekdays")}
+                </span>
+                <div
+                  className="weekday-chips"
+                  role="group"
+                  aria-label={t("edit.field.builder.weekdays")}
+                >
+                  {WEEKDAY_ORDER.map((day) => {
+                    const active = scheduleBuilder.weekdays.includes(day);
+                    return (
+                      <button
+                        type="button"
+                        key={day}
+                        className={`weekday-chip${active ? " active" : ""}`}
+                        aria-pressed={active}
+                        disabled={!builderEditable}
+                        onClick={() => toggleWeekday(day)}
+                      >
+                        {t(`edit.field.builder.day.${day}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="schedule-builder-row schedule-builder-controls">
+                <label>
+                  {t("edit.field.builder.minute")}
+                  <select
+                    value={scheduleBuilder.minute}
+                    disabled={!builderEditable}
+                    onChange={(e) =>
+                      applyBuilder({
+                        ...scheduleBuilder,
+                        minute: Number(e.target.value),
+                      })
+                    }
+                  >
+                    {Array.from({ length: 60 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {String(i).padStart(2, "0")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t("edit.field.builder.startHour")}
+                  <select
+                    value={scheduleBuilder.startHour}
+                    disabled={!builderEditable}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      applyBuilder({
+                        ...scheduleBuilder,
+                        startHour: value,
+                        endHour:
+                          scheduleBuilder.endHour < value
+                            ? value
+                            : scheduleBuilder.endHour,
+                      });
+                    }}
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {String(i).padStart(2, "0")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t("edit.field.builder.endHour")}
+                  <select
+                    value={scheduleBuilder.endHour}
+                    disabled={!builderEditable}
+                    onChange={(e) =>
+                      applyBuilder({
+                        ...scheduleBuilder,
+                        endHour: Math.max(
+                          scheduleBuilder.startHour,
+                          Number(e.target.value),
+                        ),
+                      })
+                    }
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {String(i).padStart(2, "0")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
           </label>
           <label className="check">
             <input

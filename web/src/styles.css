@@ -273,6 +273,70 @@ tr:hover td {
   flex: 0 0 auto;
 }
 
+.schedule-builder {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #12161d;
+  display: grid;
+  gap: 10px;
+}
+
+.schedule-builder-row {
+  display: grid;
+  gap: 6px;
+}
+
+.schedule-builder-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.schedule-builder-note {
+  color: var(--amber);
+  font-size: 11px;
+}
+
+.weekday-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weekday-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.weekday-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.weekday-chip.active {
+  background: var(--accent);
+  color: #0c0f14;
+  border-color: transparent;
+}
+
+.schedule-builder-controls {
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.schedule-builder-controls label {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.schedule-builder-controls select {
+  min-width: 0;
+}
+
 pre.log {
   background: #0a0c10;
   color: #d1d5db;

@@ -67,6 +67,22 @@
       "scheduleHint": "分 時 日 月 曜（プリセットを選ぶか直接編集）",
       "presetPlaceholder": "プリセットを選ぶ...",
       "presetSelected": "プリセット",
+      "builder": {
+        "weekdays": "曜日",
+        "minute": "分",
+        "startHour": "開始時",
+        "endHour": "終了時",
+        "unsupported": "このCron式はビジュアル設定では編集できません。上の入力で直接編集してください。",
+        "day": {
+          "0": "日",
+          "1": "月",
+          "2": "火",
+          "3": "水",
+          "4": "木",
+          "5": "金",
+          "6": "土"
+        }
+      },
       "enabled": "有効",
       "workdir": "作業ディレクトリ",
       "workdirPlaceholder": "/Users/you/projects/foo",

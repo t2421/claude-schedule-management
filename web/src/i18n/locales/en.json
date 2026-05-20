@@ -67,6 +67,22 @@
       "scheduleHint": "min hour dom month dow (pick a preset or edit freely)",
       "presetPlaceholder": "Choose preset...",
       "presetSelected": "Preset",
+      "builder": {
+        "weekdays": "Weekdays",
+        "minute": "Minute",
+        "startHour": "Start hour",
+        "endHour": "End hour",
+        "unsupported": "This cron expression isn't editable via the visual builder. Edit the cron field directly above.",
+        "day": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        }
+      },
       "enabled": "Enabled",
       "workdir": "Working directory",
       "workdirPlaceholder": "/Users/you/projects/foo",

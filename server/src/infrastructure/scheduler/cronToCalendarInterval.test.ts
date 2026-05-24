@@ -52,12 +52,19 @@ describe("cronToCalendarIntervals", () => {
     assert.deepEqual(r[3], { Minute: 30, Hour: 17 });
   });
 
-  it("rejects out-of-range values", () => {
+  it("rejects out-of-range values (above max)", () => {
     assert.throws(() => cronToCalendarIntervals("60 9 * * *"), ValidationError);
     assert.throws(() => cronToCalendarIntervals("0 24 * * *"), ValidationError);
     assert.throws(() => cronToCalendarIntervals("0 9 32 * *"), ValidationError);
     assert.throws(() => cronToCalendarIntervals("0 9 * 13 *"), ValidationError);
     assert.throws(() => cronToCalendarIntervals("0 9 * * 7"), ValidationError);
+  });
+
+  it("rejects out-of-range values (below min): dom and month start at 1, not 0", () => {
+    // launchd's Day key is 1-based (1=first of month). 0 is not a valid day.
+    assert.throws(() => cronToCalendarIntervals("0 9 0 * *"), ValidationError);
+    // launchd's Month key is 1-based (1=January). 0 is not a valid month.
+    assert.throws(() => cronToCalendarIntervals("0 9 * 0 *"), ValidationError);
   });
 
   it("rejects invalid range a>b", () => {

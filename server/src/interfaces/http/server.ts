@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { promises as fsp } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Hono } from "hono";
@@ -45,31 +45,29 @@ export function buildApp(c: Composition, opts: AppOptions): Hono {
     const url = new URL(ctx.req.url);
     const candidate = path.join(WEB_DIST, url.pathname);
     try {
-      if (
-        url.pathname !== "/" &&
-        candidate.startsWith(WEB_DIST) &&
-        fs.statSync(candidate).isFile()
-      ) {
-        const ext = path.extname(candidate);
-        const mime =
-          ext === ".js"
-            ? "application/javascript"
-            : ext === ".css"
-              ? "text/css"
-              : ext === ".html"
-                ? "text/html"
-                : ext === ".svg"
-                  ? "image/svg+xml"
-                  : "application/octet-stream";
-        return new Response(fs.readFileSync(candidate), {
-          headers: { "content-type": mime },
-        });
+      if (url.pathname !== "/" && candidate.startsWith(WEB_DIST)) {
+        const stat = await fsp.stat(candidate);
+        if (stat.isFile()) {
+          const ext = path.extname(candidate);
+          const mime =
+            ext === ".js"
+              ? "application/javascript"
+              : ext === ".css"
+                ? "text/css"
+                : ext === ".html"
+                  ? "text/html"
+                  : ext === ".svg"
+                    ? "image/svg+xml"
+                    : "application/octet-stream";
+          const body = await fsp.readFile(candidate);
+          return new Response(body, { headers: { "content-type": mime } });
+        }
       }
     } catch {
       // fall through
     }
     try {
-      const html = fs.readFileSync(path.join(WEB_DIST, "index.html"), "utf8");
+      const html = await fsp.readFile(path.join(WEB_DIST, "index.html"), "utf8");
       return ctx.html(html);
     } catch {
       return ctx.text(

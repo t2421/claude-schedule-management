@@ -384,6 +384,26 @@ describe("jobsRoutes", () => {
       assert.deepEqual(removed, [""]);
     });
 
+    it("returns 400 when removeOrphan throws ValidationError", async () => {
+      const app = jobsRoutes(
+        makeComposition({
+          removeOrphan: async () => {
+            throw new ValidationError("invalid label format");
+          },
+        }),
+      );
+
+      const res = await app.request("/orphans/remove", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ label: "" }),
+      });
+
+      assert.equal(res.status, 400);
+      const body = (await res.json()) as { error?: string };
+      assert.ok(typeof body.error === "string");
+    });
+
     it("returns 500 when removeOrphan throws", async () => {
       const app = jobsRoutes(
         makeComposition({

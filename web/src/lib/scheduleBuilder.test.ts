@@ -83,8 +83,14 @@ describe("parseBuilderFromCron", () => {
     assert.equal(parseBuilderFromCron("*/5 * * * *"), null);
   });
 
-  it("returns null for step hour", () => {
+  it("returns null for wildcard hour", () => {
+    // "*" in the hour field is not representable by ScheduleBuilder
+    // (which requires a concrete startHour). A step like */2 is equally unsupported.
     assert.equal(parseBuilderFromCron("0 * * * *"), null);
+  });
+
+  it("returns null for step expression in hour field", () => {
+    assert.equal(parseBuilderFromCron("0 */2 * * *"), null);
   });
 
   it("returns null for dom constraint", () => {

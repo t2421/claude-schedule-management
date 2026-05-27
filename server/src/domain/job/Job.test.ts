@@ -70,6 +70,27 @@ describe("Job.fromPlain", () => {
     assert.equal(Job.fromPlain({ ...base }).env, undefined);
   });
 
+  it("filters non-string env values, keeping only string entries", () => {
+    // fromPlain receives untrusted HTTP body where values may not be strings.
+    // Non-string entries are silently dropped so validation only sees strings.
+    const j = Job.fromPlain({
+      ...base,
+      env: { VALID: "yes", NUM: 42, FLAG: true, NULLVAL: null },
+    });
+    assert.deepEqual(j.env, { VALID: "yes" });
+  });
+
+  it("treats array-valued env as undefined", () => {
+    // Arrays are objects in JS, but the !Array.isArray guard rejects them.
+    const j = Job.fromPlain({ ...base, env: ["FOO=bar"] });
+    assert.equal(j.env, undefined);
+  });
+
+  it("treats non-object env as undefined", () => {
+    assert.equal(Job.fromPlain({ ...base, env: "FOO=bar" }).env, undefined);
+    assert.equal(Job.fromPlain({ ...base, env: 42 }).env, undefined);
+  });
+
   it("rejects empty prompt", () => {
     assert.throws(() => Job.fromPlain({ ...base, prompt: "  " }), ValidationError);
   });
@@ -161,6 +182,15 @@ describe("Job.fromPlain", () => {
       claude_args: ["-p", "--dangerously-skip-permissions"],
     });
     assert.deepEqual(j.claudeArgs, ["-p", "--dangerously-skip-permissions"]);
+  });
+
+  it("filters non-string elements from claude_args", () => {
+    // The HTTP body may contain mixed-type arrays; only string entries are kept.
+    const j = Job.fromPlain({
+      ...base,
+      claude_args: ["--flag", 42, null, true, "--other"],
+    });
+    assert.deepEqual(j.claudeArgs, ["--flag", "--other"]);
   });
 
   it("rejects negative timeout", () => {

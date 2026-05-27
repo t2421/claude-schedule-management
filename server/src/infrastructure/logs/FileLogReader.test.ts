@@ -39,6 +39,13 @@ describe("FileLogReader.read", () => {
     assert.equal(out, "FGHIJ");
   });
 
+  it("returns the full file when tailBytes exceeds the file size", async () => {
+    // LogViewer requests up to 200 000 bytes; most log files are smaller.
+    // Math.max(0, size - tail) must clamp to 0 so the entire file is returned.
+    const out = await reader.read(name, "sample.log", 200_000);
+    assert.equal(out, "0123456789ABCDEFGHIJ");
+  });
+
   it("rejects NaN tailBytes with ValidationError instead of crashing", async () => {
     // Regression: Number("abc") from a malformed ?tail query previously
     // propagated to Buffer.alloc(NaN), which throws RangeError → HTTP 500.

@@ -242,6 +242,17 @@ describe("buildCronFromBuilder", () => {
     });
     assert.equal(cron, "0 9 * * 1");
   });
+
+  it("compacts adjacent weekdays into ranges and separates non-adjacent with commas", () => {
+    // [1,2,4,5,6] → two separate ranges: Mon-Tue and Thu-Sat
+    const cron = buildCronFromBuilder({
+      minute: 0,
+      startHour: 9,
+      endHour: 9,
+      weekdays: [1, 2, 4, 5, 6],
+    });
+    assert.equal(cron, "0 9 * * 1-2,4-6");
+  });
 });
 
 describe("round-trip: preset strings survive parse → build unchanged", () => {
@@ -254,6 +265,7 @@ describe("round-trip: preset strings survive parse → build unchanged", () => {
     "0 9 * * 1",
     "0 9 * * 1,3,5",
     "0 10 * * 0,6",
+    "0 9 * * 1-2,4-6",
   ];
 
   for (const preset of presets) {

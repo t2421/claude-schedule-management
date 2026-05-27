@@ -25,9 +25,10 @@ type FsCall =
   | { op: "unlink"; path: string }
   | { op: "symlink"; target: string; path: string };
 
-function makeFsOps(
-  unlinkErrors: Record<string, NodeJS.ErrnoException> = {},
-): { fsOps: FsOps; calls: FsCall[] } {
+function makeFsOps(unlinkErrors: Record<string, NodeJS.ErrnoException> = {}): {
+  fsOps: FsOps;
+  calls: FsCall[];
+} {
   const calls: FsCall[] = [];
   return {
     calls,
@@ -199,7 +200,10 @@ describe("LaunchdScheduler.apply", () => {
     const unlinks = calls.filter((c) => c.op === "unlink").map((c) => c.path);
     const symlinks = calls
       .filter((c) => c.op === "symlink")
-      .map((c) => ({ target: (c as { op: "symlink"; target: string; path: string }).target, path: c.path }));
+      .map((c) => ({
+        target: (c as { op: "symlink"; target: string; path: string }).target,
+        path: c.path,
+      }));
     assert.ok(unlinks.includes(linked));
     assert.equal(symlinks.length, 1);
     assert.equal(symlinks[0].target, generated);

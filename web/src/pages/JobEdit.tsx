@@ -46,7 +46,6 @@ const PERMISSION_PRESETS: { key: string; value: string }[] = [
   { key: "bypass", value: "-p --dangerously-skip-permissions" },
 ];
 
-
 export function JobEdit({ mode }: Props) {
   const { t } = useTranslation();
   const { name } = useParams<{ name: string }>();

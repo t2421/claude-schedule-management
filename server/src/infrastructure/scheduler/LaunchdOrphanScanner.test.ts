@@ -203,6 +203,17 @@ describe("LaunchdOrphanScanner.scan", () => {
     assert.deepEqual(await scanner.scan(new Set()), []);
   });
 
+  it("skips SERVICE_LABEL plist in localDir", async () => {
+    const filename = `${SERVICE_LABEL}.plist`;
+    const filePath = path.join(PLISTS_DIR, filename);
+    const fsOps = makeFsOps({
+      localDir: [filename],
+      fileContent: { [filePath]: ourPlistContent("service") },
+    });
+    const scanner = new LaunchdOrphanScanner(emptyListRun(), fsOps);
+    assert.deepEqual(await scanner.scan(new Set()), []);
+  });
+
   it("sets loaded=true when label appears in launchctl list", async () => {
     const filename = `${lbl("running-job")}.plist`;
     const filePath = path.join(LAUNCH_AGENTS_DIR, filename);

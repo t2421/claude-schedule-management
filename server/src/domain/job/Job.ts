@@ -2,6 +2,33 @@ import { ValidationError } from "../errors.js";
 import { CronSchedule } from "./CronSchedule.js";
 import { JobName } from "./JobName.js";
 
+// Which agent CLI the runner invokes. Each provider has a different binary and
+// a different invocation shape (see bin/runner.sh), so the runner branches on
+// this value. "claude" is the default for backward compatibility with jobs
+// authored before multi-provider support existed.
+export const PROVIDERS = ["claude", "gemini", "codex"] as const;
+export type Provider = (typeof PROVIDERS)[number];
+export const DEFAULT_PROVIDER: Provider = "claude";
+
+function isProvider(value: unknown): value is Provider {
+  return typeof value === "string" && (PROVIDERS as readonly string[]).includes(value);
+}
+
+// Default CLI args when none are supplied. Provider-specific because the flag
+// that puts each CLI into non-interactive mode differs: claude and gemini both
+// use `-p` (print / prompt), while codex runs non-interactively via its `exec`
+// subcommand (injected by the runner) and needs no extra flag by default.
+export function defaultArgsFor(provider: Provider): string[] {
+  switch (provider) {
+    case "codex":
+      return [];
+    case "gemini":
+    case "claude":
+    default:
+      return ["-p"];
+  }
+}
+
 export type JobProps = {
   name: JobName;
   description?: string;
@@ -9,6 +36,7 @@ export type JobProps = {
   schedule: CronSchedule;
   workingDirectory: string;
   prompt: string;
+  provider: Provider;
   claudeArgs: string[];
   env?: Record<string, string>;
   timeoutSeconds?: number;
@@ -33,6 +61,9 @@ export class Job {
     }
     if (props.timeoutSeconds !== undefined && props.timeoutSeconds < 0) {
       throw new ValidationError("timeout_seconds must be >= 0");
+    }
+    if (!isProvider(props.provider)) {
+      throw new ValidationError(`provider must be one of: ${PROVIDERS.join(", ")}`);
     }
     // working_directory is required: without it the runner falls back to the
     // launchd daemon's cwd, which is almost never what the user wants and
@@ -94,6 +125,9 @@ export class Job {
   get prompt(): string {
     return this.props.prompt;
   }
+  get provider(): Provider {
+    return this.props.provider;
+  }
   get claudeArgs(): string[] {
     return [...this.props.claudeArgs];
   }
@@ -113,6 +147,7 @@ export class Job {
       schedule: { cron: this.props.schedule.expression },
       working_directory: this.props.workingDirectory,
       prompt: this.props.prompt,
+      provider: this.props.provider,
       claude_args: [...this.props.claudeArgs],
       env: this.props.env ? { ...this.props.env } : undefined,
       timeout_seconds: this.props.timeoutSeconds,
@@ -129,6 +164,16 @@ export class Job {
     const schedule = j.schedule as Record<string, unknown> | undefined;
     const cronRaw = schedule?.cron;
 
+    // Absent provider => claude (legacy jobs). An unknown value is rejected so
+    // typos surface immediately rather than silently falling back.
+    let provider: Provider = DEFAULT_PROVIDER;
+    if (j.provider !== undefined) {
+      if (!isProvider(j.provider)) {
+        throw new ValidationError(`provider must be one of: ${PROVIDERS.join(", ")}`);
+      }
+      provider = j.provider;
+    }
+
     return Job.create({
       name: JobName.parse(j.name),
       description: typeof j.description === "string" ? j.description : undefined,
@@ -137,9 +182,10 @@ export class Job {
       workingDirectory:
         typeof j.working_directory === "string" ? j.working_directory : "",
       prompt: typeof j.prompt === "string" ? j.prompt : "",
+      provider,
       claudeArgs: Array.isArray(j.claude_args)
         ? j.claude_args.filter((x): x is string => typeof x === "string")
-        : ["-p"],
+        : defaultArgsFor(provider),
       env:
         j.env && typeof j.env === "object" && !Array.isArray(j.env)
           ? Object.fromEntries(

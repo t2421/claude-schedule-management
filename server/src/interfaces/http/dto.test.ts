@@ -27,6 +27,7 @@ describe("jobToDto", () => {
       schedule: { cron: "0 2 * * *" },
       working_directory: "/home/user/project",
       prompt: "run the report",
+      provider: "claude",
       claude_args: ["-p"],
       env: undefined,
       timeout_seconds: undefined,

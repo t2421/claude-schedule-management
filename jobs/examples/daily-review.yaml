@@ -15,5 +15,8 @@ prompt: |
     - What is in progress
     - What looks stuck or blocked
   Then propose the top 3 things to focus on today.
+# Which agent CLI to run: claude (default) | gemini | codex.
+provider: claude
+# Args passed to the selected CLI (between the binary and the prompt).
 claude_args: ["-p"]
 timeout_seconds: 600

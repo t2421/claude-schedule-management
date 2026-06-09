@@ -70,15 +70,20 @@ fi
 # Provider selects which CLI to invoke. Default to claude for legacy jobs that
 # predate the provider field.
 PROVIDER="$("$YQ" -r '.provider // "claude"' "$JOB_FILE")"
+# Find a binary installed under nvm (any node version, picks latest).
+find_nvm_bin() {
+  find "$HOME/.nvm/versions/node" -maxdepth 3 -name "$1" -path "*/bin/$1" 2>/dev/null | sort -V | tail -1
+}
+
 case "$PROVIDER" in
   claude)
-    BIN="${CLAUDE:-$(find_bin claude "$HOME/.local/bin/claude" /opt/homebrew/bin/claude /usr/local/bin/claude)}"
+    BIN="${CLAUDE:-$(find_bin claude "$HOME/.local/bin/claude" /opt/homebrew/bin/claude /usr/local/bin/claude "$(find_nvm_bin claude)")}"
     ;;
   gemini)
-    BIN="${GEMINI:-$(find_bin gemini "$HOME/.local/bin/gemini" /opt/homebrew/bin/gemini /usr/local/bin/gemini)}"
+    BIN="${GEMINI:-$(find_bin gemini "$HOME/.local/bin/gemini" /opt/homebrew/bin/gemini /usr/local/bin/gemini "$(find_nvm_bin gemini)")}"
     ;;
   codex)
-    BIN="${CODEX:-$(find_bin codex "$HOME/.local/bin/codex" /opt/homebrew/bin/codex /usr/local/bin/codex)}"
+    BIN="${CODEX:-$(find_bin codex "$HOME/.local/bin/codex" /opt/homebrew/bin/codex /usr/local/bin/codex "$(find_nvm_bin codex)")}"
     ;;
   *)
     echo "[$(date -Iseconds)] ERROR unknown provider: $PROVIDER (expected claude|gemini|codex)" >> "$LOG_FILE"
@@ -87,9 +92,18 @@ case "$PROVIDER" in
 esac
 
 if ! command -v "$BIN" >/dev/null 2>&1 && [ ! -x "$BIN" ]; then
-  echo "[$(date -Iseconds)] ERROR $PROVIDER CLI not found: $BIN (set ${PROVIDER^^} env)" >> "$LOG_FILE"
+  echo "[$(date -Iseconds)] ERROR $PROVIDER CLI not found: $BIN (set $(echo "$PROVIDER" | tr '[:lower:]' '[:upper:]') env)" >> "$LOG_FILE"
   exit 1
 fi
+
+# When BIN is an absolute path (e.g. nvm-managed node script), prepend its
+# directory to PATH so that shebang-referenced runtimes (node, python, etc.)
+# are also resolvable without a full login shell.
+case "$BIN" in
+  /*)
+    export PATH="$(dirname "$BIN"):$PATH"
+    ;;
+esac
 
 ENABLED="$("$YQ" '.enabled // true' "$JOB_FILE")"
 if [ "$ENABLED" != "true" ]; then
@@ -112,6 +126,7 @@ if [ -n "$HEALTH_URL" ]; then
 fi
 
 PROMPT="$("$YQ" -r '.prompt' "$JOB_FILE")"
+MODEL="$("$YQ" -r '.model // ""' "$JOB_FILE")"
 WORKDIR="$("$YQ" -r '.working_directory // ""' "$JOB_FILE")"
 TIMEOUT="$("$YQ" -r '.timeout_seconds // 0' "$JOB_FILE")"
 
@@ -152,7 +167,9 @@ while IFS= read -r a; do ARGS+=("$a"); done < <(echo "$ARGS_JSON" | "$YQ" -r '.[
 # prompt as a trailing argument directly.
 CMD=("$BIN")
 [ "$PROVIDER" = "codex" ] && CMD+=("exec")
-CMD+=("${ARGS[@]}" "$PROMPT")
+[ -n "$MODEL" ] && CMD+=("--model" "$MODEL")
+[ ${#ARGS[@]} -gt 0 ] && CMD+=("${ARGS[@]}")
+CMD+=("$PROMPT")
 
 START_EPOCH=$(date +%s)
 if [ "$TIMEOUT" != "0" ] && [ "$TIMEOUT" != "null" ] && [ -n "$TIMEOUT" ]; then

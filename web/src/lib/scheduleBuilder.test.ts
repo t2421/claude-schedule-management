@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   buildCronFromBuilder,
+  buildNightCron,
+  NIGHT_INTERVAL_OPTIONS,
   parseBuilderFromCron,
+  parseNightFromCron,
   parseNumberList,
 } from "./scheduleBuilder.js";
 
@@ -252,6 +255,45 @@ describe("buildCronFromBuilder", () => {
       weekdays: [1, 2, 4, 5, 6],
     });
     assert.equal(cron, "0 9 * * 1-2,4-6");
+  });
+});
+
+describe("buildNightCron", () => {
+  it("builds a minute-step cron for sub-hour intervals", () => {
+    // 23:00–4:00 window wraps midnight, so the hour field is 0-4,23.
+    assert.equal(buildNightCron(15), "*/15 0-4,23 * * *");
+    assert.equal(buildNightCron(30), "*/30 0-4,23 * * *");
+  });
+
+  it("builds an on-the-hour cron for the 60-minute interval", () => {
+    assert.equal(buildNightCron(60), "0 0-4,23 * * *");
+  });
+
+  it("builds stepped hours for multi-hour intervals", () => {
+    // every 2h from 23:00 → 23, 1, 3
+    assert.equal(buildNightCron(120), "0 1,3,23 * * *");
+    // every 3h from 23:00 → 23, 2
+    assert.equal(buildNightCron(180), "0 2,23 * * *");
+    // every 4h from 23:00 → 23, 3
+    assert.equal(buildNightCron(240), "0 3,23 * * *");
+  });
+});
+
+describe("parseNightFromCron", () => {
+  it("recovers the interval for every supported option", () => {
+    for (const interval of NIGHT_INTERVAL_OPTIONS) {
+      assert.equal(parseNightFromCron(buildNightCron(interval)), interval);
+    }
+  });
+
+  it("tolerates extra whitespace", () => {
+    assert.equal(parseNightFromCron("  0   0-4,23  *  *  * "), 60);
+  });
+
+  it("returns null for non-night crons", () => {
+    assert.equal(parseNightFromCron("0 9 * * *"), null);
+    assert.equal(parseNightFromCron("*/30 9-18 * * 1-5"), null);
+    assert.equal(parseNightFromCron(""), null);
   });
 });
 

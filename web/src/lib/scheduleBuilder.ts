@@ -106,3 +106,48 @@ export function buildCronFromBuilder(builder: ScheduleBuilder): string {
   const dowField = weekdays.length === 7 ? "*" : compactToRanges(weekdays);
   return `${minute} ${hourField} * * ${dowField}`;
 }
+
+// Night mode: a fixed window that wraps past midnight (23:00–4:00) with a
+// freely configurable interval. The regular ScheduleBuilder can't express
+// this window because it requires startHour <= endHour, so night schedules
+// get their own tiny builder driven by a single "interval" value.
+export const NIGHT_START_HOUR = 23;
+export const NIGHT_END_HOUR = 4;
+
+// Minutes between runs offered in the UI. Sub-hour values map to a minute
+// step across the whole window; hour multiples map to stepped hours at :00.
+export const NIGHT_INTERVAL_OPTIONS = [15, 30, 60, 120, 180, 240] as const;
+
+// Number of hours spanned by the window, e.g. 23:00 → 4:00 is 5 hours.
+const NIGHT_WINDOW_LENGTH = (NIGHT_END_HOUR - NIGHT_START_HOUR + 24) % 24;
+
+// Every clock hour inside the window, ascending: [0, 1, 2, 3, 4, 23].
+const NIGHT_WINDOW_HOURS = Array.from(
+  { length: NIGHT_WINDOW_LENGTH + 1 },
+  (_, off) => (NIGHT_START_HOUR + off) % 24,
+).sort((a, b) => a - b);
+
+export function buildNightCron(intervalMinutes: number): string {
+  if (intervalMinutes < 60) {
+    const hourField = compactToRanges(NIGHT_WINDOW_HOURS);
+    return `*/${intervalMinutes} ${hourField} * * *`;
+  }
+  const stepHours = Math.max(1, Math.round(intervalMinutes / 60));
+  const hours: number[] = [];
+  for (let off = 0; off <= NIGHT_WINDOW_LENGTH; off += stepHours) {
+    hours.push((NIGHT_START_HOUR + off) % 24);
+  }
+  const sorted = [...new Set(hours)].sort((a, b) => a - b);
+  return `0 ${compactToRanges(sorted)} * * *`;
+}
+
+// Recognise a night-window cron and recover its interval. Matching by
+// round-tripping each supported interval keeps this in lock-step with
+// buildNightCron without a second, fragile parser.
+export function parseNightFromCron(cron: string): number | null {
+  const normalized = cron.trim().replace(/\s+/g, " ");
+  for (const interval of NIGHT_INTERVAL_OPTIONS) {
+    if (buildNightCron(interval) === normalized) return interval;
+  }
+  return null;
+}

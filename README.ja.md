@@ -153,12 +153,13 @@ runner が `gtimeout` で殺せるようにしておくのを推奨。
 
 `~/Library/LaunchAgents/local.claude-schedule.service.plist` の環境変数で変更可能（開発時はシェルの環境変数）:
 
-| 変数                            | デフォルト                      | 説明                           |
-| ------------------------------- | ------------------------------- | ------------------------------ |
-| `PORT`                          | `7878`                          | API ポート                     |
-| `HOST`                          | `127.0.0.1`                     | bind アドレス                  |
-| `CLAUDE_SCHEDULE_LABEL_PREFIX`  | `local.claude-schedule.job`     | ジョブ用 launchd ラベル prefix |
-| `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service` | サービス自身の launchd ラベル  |
+| 変数                            | デフォルト                         | 説明                                                                                                                                                      |
+| ------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                          | `7878`                             | API ポート                                                                                                                                                |
+| `HOST`                          | `127.0.0.1`                        | bind アドレス                                                                                                                                             |
+| `CLAUDE_SCHEDULE_LABEL_PREFIX`  | `local.claude-schedule.job`        | ジョブ用 launchd ラベル prefix                                                                                                                            |
+| `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service`    | サービス自身の launchd ラベル                                                                                                                             |
+| `SERVICE_HEALTH_URL`            | `http://127.0.0.1:7878/api/health` | `runner.sh` が実行前に ping するヘルスエンドポイント。到達できない（＝Web アプリ停止中）場合はジョブをスキップ（一時停止）。`""` を設定するとゲート無効。 |
 
 ## ディレクトリ
 

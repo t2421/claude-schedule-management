@@ -162,12 +162,13 @@ Set via environment variables in
 `~/Library/LaunchAgents/local.claude-schedule.service.plist` (or for
 development, in your shell):
 
-| Variable                        | Default                         | Description                   |
-| ------------------------------- | ------------------------------- | ----------------------------- |
-| `PORT`                          | `7878`                          | API port                      |
-| `HOST`                          | `127.0.0.1`                     | Bind address                  |
-| `CLAUDE_SCHEDULE_LABEL_PREFIX`  | `local.claude-schedule.job`     | launchd label prefix for jobs |
-| `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service` | launchd label for the service |
+| Variable                        | Default                            | Description                                                                                                                   |
+| ------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                          | `7878`                             | API port                                                                                                                      |
+| `HOST`                          | `127.0.0.1`                        | Bind address                                                                                                                  |
+| `CLAUDE_SCHEDULE_LABEL_PREFIX`  | `local.claude-schedule.job`        | launchd label prefix for jobs                                                                                                 |
+| `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service`    | launchd label for the service                                                                                                 |
+| `SERVICE_HEALTH_URL`            | `http://127.0.0.1:7878/api/health` | Health endpoint `runner.sh` pings before each run; jobs skip (pause) when it is unreachable. Set to `""` to disable the gate. |
 
 ## Project layout
 

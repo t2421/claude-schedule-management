@@ -7,6 +7,12 @@
 # Required tools on PATH (or set absolute paths via env):
 #   - yq (https://github.com/mikefarah/yq) for YAML parsing
 #   - claude (the Claude Code CLI)
+#
+# Service health gate: before running, the job pings the management service's
+# /api/health endpoint and skips (exit 0) if it is unreachable. This lets the
+# scheduler "pause" while the web app isn't running. Override the URL with
+# SERVICE_HEALTH_URL, or set SERVICE_HEALTH_URL="" to disable the gate and
+# always run. Uses curl (fail-open: if curl is missing the gate is skipped).
 
 set -u
 
@@ -62,6 +68,20 @@ ENABLED="$("$YQ" '.enabled // true' "$JOB_FILE")"
 if [ "$ENABLED" != "true" ]; then
   echo "[$(date -Iseconds)] skipped (enabled=false)" >> "$LOG_FILE"
   exit 0
+fi
+
+# Service health gate. Skip the run when the management web service is down so
+# scheduled jobs effectively pause while the app isn't running. Use `-` (not
+# `:-`) so that SERVICE_HEALTH_URL="" explicitly opts out of the gate.
+HEALTH_URL="${SERVICE_HEALTH_URL-http://127.0.0.1:7878/api/health}"
+if [ -n "$HEALTH_URL" ]; then
+  CURL="${CURL:-$(find_bin curl /usr/bin/curl /opt/homebrew/bin/curl /usr/local/bin/curl)}"
+  if [ ! -x "$CURL" ]; then
+    echo "[$(date -Iseconds)] WARN curl not found; skipping service health gate" >> "$LOG_FILE"
+  elif ! "$CURL" -sf --max-time 3 "$HEALTH_URL" >/dev/null 2>&1; then
+    echo "[$(date -Iseconds)] skipped (service not running at $HEALTH_URL)" >> "$LOG_FILE"
+    exit 0
+  fi
 fi
 
 PROMPT="$("$YQ" -r '.prompt' "$JOB_FILE")"

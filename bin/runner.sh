@@ -1,12 +1,20 @@
 #!/bin/bash
-# Invoked by launchd. Reads jobs/<name>.yaml, runs `claude -p <prompt>`,
-# and appends stdout/stderr/exit code to logs/<name>/YYYY-MM-DD.log.
+# Invoked by launchd. Reads jobs/<name>.yaml, runs the configured agent CLI
+# with the job's prompt, and appends stdout/stderr/exit code to
+# logs/<name>/YYYY-MM-DD.log.
 #
 # Usage: runner.sh <job-name>
 #
+# The `provider` field in the YAML selects which CLI to run; each is invoked
+# differently (see "build invocation" below):
+#   - claude (default): claude <args> <prompt>
+#   - gemini:           gemini <args> <prompt>   (-p takes the prompt value)
+#   - codex:            codex exec <args> <prompt>
+#
 # Required tools on PATH (or set absolute paths via env):
 #   - yq (https://github.com/mikefarah/yq) for YAML parsing
-#   - claude (the Claude Code CLI)
+#   - the CLI matching the job's provider:
+#       claude (CLAUDE env) / gemini (GEMINI env) / codex (CODEX env)
 
 set -u
 
@@ -43,7 +51,6 @@ find_bin() {
   echo "$name"  # last resort, will fail later with clear error
 }
 YQ="${YQ:-$(find_bin yq /opt/homebrew/bin/yq /usr/local/bin/yq)}"
-CLAUDE="${CLAUDE:-$(find_bin claude "$HOME/.local/bin/claude" /opt/homebrew/bin/claude /usr/local/bin/claude)}"
 
 if [ ! -f "$JOB_FILE" ]; then
   echo "[$(date -Iseconds)] ERROR job file not found: $JOB_FILE" >> "$LOG_FILE"
@@ -53,8 +60,28 @@ if [ ! -x "$YQ" ]; then
   echo "[$(date -Iseconds)] ERROR yq not found (set YQ env or install yq)" >> "$LOG_FILE"
   exit 1
 fi
-if [ ! -x "$CLAUDE" ]; then
-  echo "[$(date -Iseconds)] ERROR claude CLI not found (set CLAUDE env)" >> "$LOG_FILE"
+
+# Provider selects which CLI to invoke. Default to claude for legacy jobs that
+# predate the provider field.
+PROVIDER="$("$YQ" -r '.provider // "claude"' "$JOB_FILE")"
+case "$PROVIDER" in
+  claude)
+    BIN="${CLAUDE:-$(find_bin claude "$HOME/.local/bin/claude" /opt/homebrew/bin/claude /usr/local/bin/claude)}"
+    ;;
+  gemini)
+    BIN="${GEMINI:-$(find_bin gemini "$HOME/.local/bin/gemini" /opt/homebrew/bin/gemini /usr/local/bin/gemini)}"
+    ;;
+  codex)
+    BIN="${CODEX:-$(find_bin codex "$HOME/.local/bin/codex" /opt/homebrew/bin/codex /usr/local/bin/codex)}"
+    ;;
+  *)
+    echo "[$(date -Iseconds)] ERROR unknown provider: $PROVIDER (expected claude|gemini|codex)" >> "$LOG_FILE"
+    exit 1
+    ;;
+esac
+
+if ! command -v "$BIN" >/dev/null 2>&1 && [ ! -x "$BIN" ]; then
+  echo "[$(date -Iseconds)] ERROR $PROVIDER CLI not found: $BIN (set ${PROVIDER^^} env)" >> "$LOG_FILE"
   exit 1
 fi
 
@@ -75,8 +102,12 @@ if [ -n "$WORKDIR" ]; then
   }
 fi
 
-# Build claude_args
-ARGS_JSON="$("$YQ" -o=json '.claude_args // ["-p"]' "$JOB_FILE")"
+# Build CLI args. The default differs by provider: claude / gemini use `-p`
+# for non-interactive mode, while codex relies on its `exec` subcommand
+# (prepended below) and needs no default flag.
+DEFAULT_ARGS='["-p"]'
+[ "$PROVIDER" = "codex" ] && DEFAULT_ARGS='[]'
+ARGS_JSON="$("$YQ" -o=json ".claude_args // $DEFAULT_ARGS" "$JOB_FILE")"
 
 # Export env vars listed under .env (each as KEY=VALUE)
 while IFS='=' read -r k v; do
@@ -86,7 +117,7 @@ done < <("$YQ" -r '.env // {} | to_entries | .[] | "\(.key)=\(.value)"' "$JOB_FI
 
 {
   echo "===================================================================="
-  echo "[$(date -Iseconds)] START job=$JOB_NAME workdir=${WORKDIR:-$PWD}"
+  echo "[$(date -Iseconds)] START job=$JOB_NAME provider=$PROVIDER workdir=${WORKDIR:-$PWD}"
   echo "--- prompt ---"
   echo "$PROMPT"
   echo "--- output ---"
@@ -96,17 +127,24 @@ done < <("$YQ" -r '.env // {} | to_entries | .[] | "\(.key)=\(.value)"' "$JOB_FI
 ARGS=()
 while IFS= read -r a; do ARGS+=("$a"); done < <(echo "$ARGS_JSON" | "$YQ" -r '.[]')
 
+# Build the full invocation. codex runs non-interactively via its `exec`
+# subcommand, which must come before any flags; claude and gemini take the
+# prompt as a trailing argument directly.
+CMD=("$BIN")
+[ "$PROVIDER" = "codex" ] && CMD+=("exec")
+CMD+=("${ARGS[@]}" "$PROMPT")
+
 START_EPOCH=$(date +%s)
 if [ "$TIMEOUT" != "0" ] && [ "$TIMEOUT" != "null" ] && [ -n "$TIMEOUT" ]; then
   # macOS doesn't ship `timeout`. Try gtimeout (coreutils) if available.
   if command -v gtimeout >/dev/null; then
-    gtimeout "$TIMEOUT" "$CLAUDE" "${ARGS[@]}" "$PROMPT" >> "$LOG_FILE" 2>&1
+    gtimeout "$TIMEOUT" "${CMD[@]}" >> "$LOG_FILE" 2>&1
   else
     echo "[$(date -Iseconds)] WARN timeout_seconds=$TIMEOUT configured but gtimeout not found; running without timeout (brew install coreutils)" >> "$LOG_FILE"
-    "$CLAUDE" "${ARGS[@]}" "$PROMPT" >> "$LOG_FILE" 2>&1
+    "${CMD[@]}" >> "$LOG_FILE" 2>&1
   fi
 else
-  "$CLAUDE" "${ARGS[@]}" "$PROMPT" >> "$LOG_FILE" 2>&1
+  "${CMD[@]}" >> "$LOG_FILE" 2>&1
 fi
 EXIT_CODE=$?
 END_EPOCH=$(date +%s)

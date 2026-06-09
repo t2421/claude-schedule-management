@@ -87,10 +87,13 @@
       "workdir": "作業ディレクトリ",
       "workdirPlaceholder": "/Users/you/projects/foo",
       "workdirRequired": "作業ディレクトリは必須です。絶対パスを指定してください。",
+      "provider": "AI プロバイダ",
+      "providerHint": "実行する CLI（claude / gemini / codex）",
       "prompt": "プロンプト",
-      "promptPlaceholder": "Claude にやってもらいたいこと",
-      "claudeArgs": "claude_args",
-      "claudeArgsHint": "空白区切り、デフォルト: -p",
+      "promptPlaceholder": "AI にやってもらいたいこと",
+      "claudeArgs": "CLI 引数",
+      "claudeArgsHint": "空白区切り、{{provider}} のデフォルト: {{default}}",
+      "argsNone": "(なし)",
       "permissionPreset": {
         "placeholder": "Permission preset を選ぶ...",
         "selected": "Permission preset",
@@ -123,9 +126,19 @@
     "monday9": "月曜 9:00",
     "monthly1": "毎月1日 0:00"
   },
+  "providers": {
+    "claude": "Claude Code (claude)",
+    "gemini": "Gemini CLI (gemini)",
+    "codex": "Codex CLI (codex)"
+  },
   "permissionPresets": {
-    "plan": "Plan のみ（読み取り専用、最も安全）",
-    "allowedTools": "限定 allowlist (Read,Grep,Glob)",
-    "bypass": "全許可スキップ（フル権限、危険）"
+    "claudePlan": "Plan のみ（読み取り専用、最も安全）",
+    "claudeAllowedTools": "限定 allowlist (Read,Grep,Glob)",
+    "claudeBypass": "全許可スキップ（フル権限、危険）",
+    "geminiAutoEdit": "編集を自動承認 (auto_edit)",
+    "geminiYolo": "全自動承認 (YOLO、危険)",
+    "codexReadOnly": "読み取り専用サンドボックス（最も安全）",
+    "codexFullAuto": "フル自動（ワークスペース書込可）",
+    "codexBypass": "承認・サンドボックスを無効化（危険）"
   }
 }

@@ -1,0 +1,20 @@
+# Daily summary produced by the Gemini CLI instead of Claude.
+# Copy this file to jobs/gemini-daily-summary.yaml, edit the paths and prompt,
+# then save through the web UI.
+#
+# Requires the `gemini` CLI on PATH (or set the GEMINI env var to its absolute
+# path). Install: npm install -g @google/gemini-cli
+name: gemini-daily-summary
+description: Daily summary via Gemini CLI
+enabled: false # disabled by default — turn on after editing
+schedule:
+  cron: "0 9 * * *" # 9:00 every day
+working_directory: /Users/CHANGE_ME/projects/your-project
+prompt: |
+  Summarize the most important changes in this repo from the last 24 hours
+  and list anything that looks risky.
+provider: gemini
+# For gemini, `-p` takes the prompt as its value, so it must come last.
+# `--yolo` auto-approves actions (scheduled runs have no TTY to confirm them).
+claude_args: ["--yolo", "-p"]
+timeout_seconds: 600

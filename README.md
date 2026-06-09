@@ -32,6 +32,7 @@ source of truth, the web UI just edits it.
 ## Features
 
 - Browser UI for listing, creating, editing, and deleting jobs
+- Multiple agent CLIs: Claude Code (`claude`), Gemini CLI (`gemini`), and Codex CLI (`codex`) — pick one per job
 - 5-field cron schedule with built-in presets (hourly, daily 9:00, weekdays, etc.)
 - Native macOS folder picker for the working directory
 - Run any job immediately ("Run now" button, internally `launchctl kickstart`)
@@ -45,7 +46,10 @@ source of truth, the web UI just edits it.
 - macOS (this is the only supported scheduler backend today — see [ROADMAP.md](ROADMAP.md))
 - Node 20+
 - [`yq`](https://github.com/mikefarah/yq) — `brew install yq`
-- [`claude` CLI](https://docs.anthropic.com/claude/docs/claude-code) — Claude Code
+- At least one agent CLI, matching the `provider` of your jobs:
+  - [`claude`](https://docs.anthropic.com/claude/docs/claude-code) — Claude Code (default provider)
+  - [`gemini`](https://github.com/google-gemini/gemini-cli) — Gemini CLI (`npm install -g @google/gemini-cli`), for `provider: gemini`
+  - [`codex`](https://github.com/openai/codex) — Codex CLI (`npm install -g @openai/codex`), for `provider: codex`
 
 Run the dependency check:
 
@@ -102,7 +106,10 @@ npm test
 3. When the scheduled time arrives, launchd executes
    `bin/runner.sh <name>`.
 4. The runner reads the YAML via `yq`, `cd`s into `working_directory`, and
-   runs `claude -p "<prompt>"`.
+   runs the CLI selected by `provider` with the prompt:
+   - `claude` (default): `claude <args> "<prompt>"`
+   - `gemini`: `gemini <args> "<prompt>"` (`-p` takes the prompt value, so keep it last)
+   - `codex`: `codex exec <args> "<prompt>"` (`exec` is prepended automatically)
 5. stdout / stderr / exit code are appended to
    `logs/<name>/YYYY-MM-DD.log`.
 
@@ -117,19 +124,28 @@ schedule:
 working_directory: /Users/you/projects/foo
 prompt: |
   Look at yesterday's progress and propose today's tasks.
-claude_args: ["-p"]
+provider: claude # claude (default) | gemini | codex
+claude_args: ["-p"] # args passed to the selected CLI
 env:
   EXTRA: value
 timeout_seconds: 600
 ```
 
-See [`jobs/examples/`](jobs/examples) for more.
+`provider` selects which CLI runs the job; omit it for `claude` (so existing
+jobs keep working unchanged). `claude_args` is passed to whichever CLI is
+selected — its name is historical. The default is `["-p"]` for `claude` and
+`gemini`, and `[]` for `codex` (which runs via its `exec` subcommand).
+
+See [`jobs/examples/`](jobs/examples) for more, including `gemini-*` and
+`codex-*` samples.
 
 ### Scheduled job permission strategy
 
 Scheduled runs happen without a TTY. If the prompt triggers a tool that asks
 for permission, no one is there to answer — the job will either fail or hang.
-Pick one of these strategies and bake it into `claude_args`:
+Pick a strategy for your provider and bake it into `claude_args`.
+
+**Claude** (`provider: claude`):
 
 | Strategy             | `claude_args`                                                                    | Risk   | When                                             |
 | -------------------- | -------------------------------------------------------------------------------- | ------ | ------------------------------------------------ |
@@ -138,8 +154,23 @@ Pick one of these strategies and bake it into `claude_args`:
 | Bypass permissions   | `["-p", "--dangerously-skip-permissions"]`                                       | High   | Trusted automation with full FS / network access |
 | Per-project settings | `["-p"]` + a `.claude/settings.json` in the working dir with `permissions.allow` | Medium | Granular, project-tracked rules                  |
 
-The UI offers these as presets next to the `claude_args` field. Always set
-`timeout_seconds` as a safety net — install GNU coreutils
+**Gemini** (`provider: gemini`) — `-p` carries the prompt, so keep it last:
+
+| Strategy           | `claude_args`                            | Risk   |
+| ------------------ | ---------------------------------------- | ------ |
+| Auto-approve edits | `["--approval-mode", "auto_edit", "-p"]` | Medium |
+| YOLO (auto all)    | `["--yolo", "-p"]`                       | High   |
+
+**Codex** (`provider: codex`) — runs via `codex exec`, so no `-p`:
+
+| Strategy           | `claude_args`                                    | Risk   |
+| ------------------ | ------------------------------------------------ | ------ |
+| Read-only (safest) | `["--sandbox", "read-only"]`                     | Lowest |
+| Full auto          | `["--full-auto"]`                                | Medium |
+| Bypass sandbox     | `["--dangerously-bypass-approvals-and-sandbox"]` | High   |
+
+The UI offers these as presets (per provider) next to the args field. Always
+set `timeout_seconds` as a safety net — install GNU coreutils
 (`brew install coreutils`) so the runner can enforce it with `gtimeout`.
 
 ### Supported cron syntax
@@ -169,6 +200,10 @@ development, in your shell):
 | `CLAUDE_SCHEDULE_LABEL_PREFIX`  | `local.claude-schedule.job`     | launchd label prefix for jobs |
 | `CLAUDE_SCHEDULE_SERVICE_LABEL` | `local.claude-schedule.service` | launchd label for the service |
 
+`bin/runner.sh` also honors `YQ`, `CLAUDE`, `GEMINI`, and `CODEX` — set any of
+these to the absolute path of the corresponding binary if it isn't resolvable
+from the job's `PATH`.
+
 ## Project layout
 
 ```
@@ -181,7 +216,7 @@ claude-schedule-management/
 │   ├── install-service.sh    install as a per-user launchd agent
 │   └── uninstall-service.sh
 ├── jobs/                YAML manifests (source of truth)
-│   └── examples/        sample jobs
+│   └── examples/        sample jobs (claude / gemini / codex)
 ├── plists/              generated plists (gitignored)
 └── logs/                per-job logs (gitignored)
 ```

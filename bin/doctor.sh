@@ -86,6 +86,14 @@ check_required "claude"     "Claude CLI"  "see https://docs.anthropic.com/claude
   "claude" "$HOME/.local/bin/claude" "/opt/homebrew/bin/claude" "/usr/local/bin/claude"
 check_required "yq"         "yq"          "brew install yq" \
   "yq" "/opt/homebrew/bin/yq" "/usr/local/bin/yq"
+
+# Optional agent CLIs. Only needed for jobs whose provider is set accordingly.
+check_recommended "gemini"  "Gemini CLI" \
+  "optional — npm install -g @google/gemini-cli (needed for provider: gemini)" \
+  "gemini" "$HOME/.local/bin/gemini" "/opt/homebrew/bin/gemini" "/usr/local/bin/gemini"
+check_recommended "codex"   "Codex CLI" \
+  "optional — npm install -g @openai/codex (needed for provider: codex)" \
+  "codex" "$HOME/.local/bin/codex" "/opt/homebrew/bin/codex" "/usr/local/bin/codex"
 check_required "launchctl"  "launchctl"   "built into macOS — something is very wrong" \
   "launchctl"
 

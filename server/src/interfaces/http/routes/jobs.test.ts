@@ -16,6 +16,7 @@ function makeJob(nameStr = "daily-review"): Job {
     schedule: CronSchedule.parse("0 9 * * *"),
     workingDirectory: "/home/user/project",
     prompt: "Review the daily summary",
+    provider: "claude",
     claudeArgs: ["-p"],
   });
 }

@@ -99,6 +99,8 @@
       "workdirRequired": "作業ディレクトリは必須です。絶対パスを指定してください。",
       "provider": "AI プロバイダ",
       "providerHint": "実行する CLI（claude / gemini / codex）",
+      "model": "モデル",
+      "modelHint": "省略時はCLIのデフォルトモデルを使用",
       "prompt": "プロンプト",
       "promptPlaceholder": "AI にやってもらいたいこと",
       "claudeArgs": "CLI 引数",

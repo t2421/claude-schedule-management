@@ -99,6 +99,8 @@
       "workdirRequired": "Working directory is required. Provide an absolute path.",
       "provider": "AI provider",
       "providerHint": "which CLI to run (claude / gemini / codex)",
+      "model": "Model",
+      "modelHint": "omit to use the CLI's default model",
       "prompt": "Prompt",
       "promptPlaceholder": "What you want the agent to do",
       "claudeArgs": "CLI args",

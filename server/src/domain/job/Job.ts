@@ -37,6 +37,7 @@ export type JobProps = {
   workingDirectory: string;
   prompt: string;
   provider: Provider;
+  model?: string;
   claudeArgs: string[];
   env?: Record<string, string>;
   timeoutSeconds?: number;
@@ -99,6 +100,11 @@ export class Job {
     // claude_args go through spawn argv, so there is no shell injection
     // surface — but newlines / null bytes can confuse downstream tooling and
     // are never useful flag values.
+    if (props.model !== undefined) {
+      if (props.model.includes("\n") || props.model.includes("\0")) {
+        throw new ValidationError("model must not contain newlines or NUL");
+      }
+    }
     for (const arg of props.claudeArgs) {
       if (arg.includes("\n") || arg.includes("\0")) {
         throw new ValidationError("claude_args must not contain newlines or NUL");
@@ -128,6 +134,9 @@ export class Job {
   get provider(): Provider {
     return this.props.provider;
   }
+  get model(): string | undefined {
+    return this.props.model;
+  }
   get claudeArgs(): string[] {
     return [...this.props.claudeArgs];
   }
@@ -148,6 +157,7 @@ export class Job {
       working_directory: this.props.workingDirectory,
       prompt: this.props.prompt,
       provider: this.props.provider,
+      model: this.props.model,
       claude_args: [...this.props.claudeArgs],
       env: this.props.env ? { ...this.props.env } : undefined,
       timeout_seconds: this.props.timeoutSeconds,
@@ -183,6 +193,7 @@ export class Job {
         typeof j.working_directory === "string" ? j.working_directory : "",
       prompt: typeof j.prompt === "string" ? j.prompt : "",
       provider,
+      model: typeof j.model === "string" && j.model ? j.model : undefined,
       claudeArgs: Array.isArray(j.claude_args)
         ? j.claude_args.filter((x): x is string => typeof x === "string")
         : defaultArgsFor(provider),

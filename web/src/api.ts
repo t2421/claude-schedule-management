@@ -9,6 +9,7 @@ export type Job = {
   working_directory?: string;
   prompt: string;
   provider?: Provider;
+  model?: string;
   claude_args?: string[];
   env?: Record<string, string>;
   timeout_seconds?: number;

@@ -15,6 +15,28 @@ import {
 
 type Props = { mode: "new" | "edit" };
 
+const MODELS: Record<Provider, { value: string; label: string }[]> = {
+  claude: [
+    { value: "", label: "Default" },
+    { value: "claude-fable-5", label: "Claude Fable 5" },
+    { value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" },
+    { value: "claude-opus-4-8", label: "Claude Opus 4.8" },
+    { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" },
+  ],
+  gemini: [
+    { value: "", label: "Default" },
+    { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+    { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+    { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
+  ],
+  codex: [
+    { value: "", label: "Default" },
+    { value: "o4-mini", label: "o4-mini" },
+    { value: "o3", label: "o3" },
+    { value: "codex-mini-latest", label: "codex-mini-latest" },
+  ],
+};
+
 const EMPTY: Job = {
   name: "",
   description: "",
@@ -23,6 +45,7 @@ const EMPTY: Job = {
   working_directory: "",
   prompt: "",
   provider: "claude",
+  model: "",
   claude_args: ["-p"],
 };
 
@@ -110,6 +133,7 @@ export function JobEdit({ mode }: Props) {
               : "",
           );
           setArgsText((job.claude_args ?? ["-p"]).join(" "));
+          if (!job.model) update("model", "");
         })
         .catch((e) => setErr((e as Error).message));
     }
@@ -140,6 +164,7 @@ export function JobEdit({ mode }: Props) {
   // codex equivalent). The user can then pick a preset for the new provider.
   function changeProvider(next: Provider) {
     update("provider", next);
+    update("model", "");
     setArgsText(defaultArgsText(next));
   }
 
@@ -183,6 +208,7 @@ export function JobEdit({ mode }: Props) {
       const payload: Job = {
         ...job,
         provider,
+        model: job.model || undefined,
         env: Object.keys(parsedEnv).length ? parsedEnv : undefined,
         claude_args: parsedArgs,
       };
@@ -423,20 +449,36 @@ export function JobEdit({ mode }: Props) {
             </button>
           </div>
         </label>
-        <label>
-          {t("edit.field.provider")}{" "}
-          <span className="cron-hint">({t("edit.field.providerHint")})</span>
-          <select
-            value={provider}
-            onChange={(e) => changeProvider(e.target.value as Provider)}
-          >
-            {PROVIDERS.map((p) => (
-              <option key={p} value={p}>
-                {t(`providers.${p}`)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="row">
+          <label>
+            {t("edit.field.provider")}{" "}
+            <span className="cron-hint">({t("edit.field.providerHint")})</span>
+            <select
+              value={provider}
+              onChange={(e) => changeProvider(e.target.value as Provider)}
+            >
+              {PROVIDERS.map((p) => (
+                <option key={p} value={p}>
+                  {t(`providers.${p}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t("edit.field.model")}{" "}
+            <span className="cron-hint">({t("edit.field.modelHint")})</span>
+            <select
+              value={job.model ?? ""}
+              onChange={(e) => update("model", e.target.value)}
+            >
+              {MODELS[provider].map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <label>
           {t("edit.field.prompt")}
           <textarea

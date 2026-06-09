@@ -72,6 +72,16 @@
         "minute": "Minute",
         "startHour": "Start hour",
         "endHour": "End hour",
+        "nightWindow": "Night (23:00–4:00)",
+        "interval": "Interval",
+        "intervalOption": {
+          "15": "Every 15 minutes",
+          "30": "Every 30 minutes",
+          "60": "Hourly",
+          "120": "Every 2 hours",
+          "180": "Every 3 hours",
+          "240": "Every 4 hours"
+        },
         "unsupported": "This cron expression isn't editable via the visual builder. Edit the cron field directly above.",
         "day": {
           "0": "Sun",
@@ -87,10 +97,13 @@
       "workdir": "Working directory",
       "workdirPlaceholder": "/Users/you/projects/foo",
       "workdirRequired": "Working directory is required. Provide an absolute path.",
+      "provider": "AI provider",
+      "providerHint": "which CLI to run (claude / gemini / codex)",
       "prompt": "Prompt",
-      "promptPlaceholder": "What you want Claude to do",
-      "claudeArgs": "claude_args",
-      "claudeArgsHint": "space separated; default: -p",
+      "promptPlaceholder": "What you want the agent to do",
+      "claudeArgs": "CLI args",
+      "claudeArgsHint": "space separated; {{provider}} default: {{default}}",
+      "argsNone": "(none)",
       "permissionPreset": {
         "placeholder": "Permission preset...",
         "selected": "Permission preset",
@@ -119,13 +132,24 @@
     "daily12": "Daily at 12:00",
     "daily18": "Daily at 18:00",
     "daily0": "Daily at 0:00",
+    "night": "Night 23:00–4:00",
     "weekday9": "Weekdays at 9:00",
     "monday9": "Mondays at 9:00",
     "monthly1": "1st of every month at 0:00"
   },
+  "providers": {
+    "claude": "Claude Code (claude)",
+    "gemini": "Gemini CLI (gemini)",
+    "codex": "Codex CLI (codex)"
+  },
   "permissionPresets": {
-    "plan": "Plan only (read-only, safest)",
-    "allowedTools": "Limited allowlist (Read,Grep,Glob)",
-    "bypass": "Bypass all permissions (full power, dangerous)"
+    "claudePlan": "Plan only (read-only, safest)",
+    "claudeAllowedTools": "Limited allowlist (Read,Grep,Glob)",
+    "claudeBypass": "Bypass all permissions (full power, dangerous)",
+    "geminiAutoEdit": "Auto-approve edits (auto_edit)",
+    "geminiYolo": "Auto-approve everything (YOLO, dangerous)",
+    "codexReadOnly": "Read-only sandbox (safest)",
+    "codexFullAuto": "Full auto (workspace-write)",
+    "codexBypass": "Bypass approvals & sandbox (dangerous)"
   }
 }

@@ -72,6 +72,16 @@
         "minute": "分",
         "startHour": "開始時",
         "endHour": "終了時",
+        "nightWindow": "夜間 (23:00–4:00)",
+        "interval": "インターバル",
+        "intervalOption": {
+          "15": "15分毎",
+          "30": "30分毎",
+          "60": "1時間毎",
+          "120": "2時間毎",
+          "180": "3時間毎",
+          "240": "4時間毎"
+        },
         "unsupported": "このCron式はビジュアル設定では編集できません。上の入力で直接編集してください。",
         "day": {
           "0": "日",
@@ -87,10 +97,13 @@
       "workdir": "作業ディレクトリ",
       "workdirPlaceholder": "/Users/you/projects/foo",
       "workdirRequired": "作業ディレクトリは必須です。絶対パスを指定してください。",
+      "provider": "AI プロバイダ",
+      "providerHint": "実行する CLI（claude / gemini / codex）",
       "prompt": "プロンプト",
-      "promptPlaceholder": "Claude にやってもらいたいこと",
-      "claudeArgs": "claude_args",
-      "claudeArgsHint": "空白区切り、デフォルト: -p",
+      "promptPlaceholder": "AI にやってもらいたいこと",
+      "claudeArgs": "CLI 引数",
+      "claudeArgsHint": "空白区切り、{{provider}} のデフォルト: {{default}}",
+      "argsNone": "(なし)",
       "permissionPreset": {
         "placeholder": "Permission preset を選ぶ...",
         "selected": "Permission preset",
@@ -119,13 +132,24 @@
     "daily12": "毎日 12:00",
     "daily18": "毎日 18:00",
     "daily0": "毎日 0:00",
+    "night": "夜間 23:00–4:00",
     "weekday9": "平日 9:00",
     "monday9": "月曜 9:00",
     "monthly1": "毎月1日 0:00"
   },
+  "providers": {
+    "claude": "Claude Code (claude)",
+    "gemini": "Gemini CLI (gemini)",
+    "codex": "Codex CLI (codex)"
+  },
   "permissionPresets": {
-    "plan": "Plan のみ（読み取り専用、最も安全）",
-    "allowedTools": "限定 allowlist (Read,Grep,Glob)",
-    "bypass": "全許可スキップ（フル権限、危険）"
+    "claudePlan": "Plan のみ（読み取り専用、最も安全）",
+    "claudeAllowedTools": "限定 allowlist (Read,Grep,Glob)",
+    "claudeBypass": "全許可スキップ（フル権限、危険）",
+    "geminiAutoEdit": "編集を自動承認 (auto_edit)",
+    "geminiYolo": "全自動承認 (YOLO、危険)",
+    "codexReadOnly": "読み取り専用サンドボックス（最も安全）",
+    "codexFullAuto": "フル自動（ワークスペース書込可）",
+    "codexBypass": "承認・サンドボックスを無効化（危険）"
   }
 }

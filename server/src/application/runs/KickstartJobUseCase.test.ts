@@ -15,6 +15,7 @@ function makeJob(nameStr: string): Job {
     schedule: CronSchedule.parse("0 9 * * *"),
     workingDirectory: "/tmp",
     prompt: "hello",
+    provider: "claude",
     claudeArgs: [],
   });
 }

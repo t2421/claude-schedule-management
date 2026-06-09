@@ -199,6 +199,38 @@ describe("Job.fromPlain", () => {
       ValidationError,
     );
   });
+
+  it("defaults provider to claude when absent", () => {
+    assert.equal(Job.fromPlain(base).provider, "claude");
+  });
+
+  it("accepts gemini and codex providers", () => {
+    assert.equal(Job.fromPlain({ ...base, provider: "gemini" }).provider, "gemini");
+    assert.equal(Job.fromPlain({ ...base, provider: "codex" }).provider, "codex");
+  });
+
+  it("rejects an unknown provider", () => {
+    assert.throws(() => Job.fromPlain({ ...base, provider: "gpt" }), ValidationError);
+    assert.throws(() => Job.fromPlain({ ...base, provider: 42 }), ValidationError);
+  });
+
+  it("defaults claude_args to -p for claude and gemini", () => {
+    assert.deepEqual(Job.fromPlain({ ...base, provider: "claude" }).claudeArgs, ["-p"]);
+    assert.deepEqual(Job.fromPlain({ ...base, provider: "gemini" }).claudeArgs, ["-p"]);
+  });
+
+  it("defaults claude_args to empty for codex (runs via `exec`)", () => {
+    assert.deepEqual(Job.fromPlain({ ...base, provider: "codex" }).claudeArgs, []);
+  });
+
+  it("keeps explicit claude_args regardless of provider default", () => {
+    const j = Job.fromPlain({
+      ...base,
+      provider: "codex",
+      claude_args: ["--full-auto"],
+    });
+    assert.deepEqual(j.claudeArgs, ["--full-auto"]);
+  });
 });
 
 describe("Job.toPlain()", () => {
@@ -227,6 +259,14 @@ describe("Job.toPlain()", () => {
     assert.equal(plain.description, undefined);
     assert.equal(plain.env, undefined);
     assert.equal(plain.timeout_seconds, undefined);
+  });
+
+  it("serializes the provider", () => {
+    assert.equal(Job.fromPlain(base).toPlain().provider, "claude");
+    assert.equal(
+      Job.fromPlain({ ...base, provider: "codex" }).toPlain().provider,
+      "codex",
+    );
   });
 
   it("round-trips through fromPlain", () => {

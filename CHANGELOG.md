@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Multiple agent CLIs** — a job's new `provider` field selects which CLI the
+  runner invokes: `claude` (default, backward compatible), `gemini`, or
+  `codex`. Each is launched with the right invocation (`gemini -p`,
+  `codex exec`, …) and the job editor exposes an AI-provider selector plus
+  per-provider permission presets. `bin/runner.sh` resolves the matching
+  binary (`CLAUDE` / `GEMINI` / `CODEX` env overrides), and `bin/doctor.sh`
+  now checks for `gemini` and `codex` as optional tools. Example jobs added
+  under `jobs/examples/`.
 - Permission preset dropdown next to `claude_args` in the job editor:
   Plan-only, limited tool allowlist, and "bypass permissions" templates.
   Scheduled runs without a TTY would otherwise hang on tool prompts —

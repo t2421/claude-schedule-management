@@ -1,0 +1,23 @@
+# Nightly task driven by the Codex CLI instead of Claude.
+# Copy this file to jobs/codex-nightly-tests.yaml, edit the paths and prompt,
+# then save through the web UI.
+#
+# Requires the `codex` CLI on PATH (or set the CODEX env var to its absolute
+# path). Install: npm install -g @openai/codex
+#
+# Codex runs non-interactively via its `exec` subcommand, which the runner
+# prepends automatically — so claude_args holds only the extra flags.
+name: codex-nightly-tests
+description: Nightly test triage via Codex CLI
+enabled: false # disabled by default — turn on after editing
+schedule:
+  cron: "0 2 * * *" # 2:00 every day
+working_directory: /Users/CHANGE_ME/projects/your-project
+prompt: |
+  Run the test suite. If anything fails, summarize the failures and propose
+  the smallest fix for each.
+provider: codex
+# `--full-auto` lets codex edit files and run commands in the workspace without
+# interactive approval. Use --sandbox read-only for a safer, read-only run.
+claude_args: ["--full-auto"]
+timeout_seconds: 1200

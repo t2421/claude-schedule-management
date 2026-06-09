@@ -131,6 +131,10 @@ timeout_seconds: 600
 
 他の例（`gemini-*` / `codex-*` のサンプルを含む）は [`jobs/examples/`](jobs/examples) を参照。
 
+GitHub の issue / Projects とマルチ LLM（Claude / Gemini / Codex）を組み合わせた
+深夜自動運用ワークフローの実践集は
+[`docs/nightly-workflows.ja.md`](docs/nightly-workflows.ja.md)（10案）を参照。
+
 ### スケジュールジョブの permission 戦略
 
 スケジュール実行は TTY が無いため、プロンプトがツール許可を要求するとジョブは

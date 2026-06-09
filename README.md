@@ -139,6 +139,11 @@ selected — its name is historical. The default is `["-p"]` for `claude` and
 See [`jobs/examples/`](jobs/examples) for more, including `gemini-*` and
 `codex-*` samples.
 
+For a practical playbook of overnight automation workflows that combine GitHub
+issues / Projects with the multi-LLM (Claude / Gemini / Codex) strengths, see
+[`docs/nightly-workflows.ja.md`](docs/nightly-workflows.ja.md) (10 designs,
+Japanese).
+
 ### Scheduled job permission strategy
 
 Scheduled runs happen without a TTY. If the prompt triggers a tool that asks

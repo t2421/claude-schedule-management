@@ -4,8 +4,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api, type Job, type Provider, PROVIDERS } from "../api";
 import {
   buildCronFromBuilder,
+  buildNightCron,
   DEFAULT_SCHEDULE_BUILDER,
+  NIGHT_INTERVAL_OPTIONS,
   parseBuilderFromCron,
+  parseNightFromCron,
   type ScheduleBuilder,
   WEEKDAY_ORDER,
 } from "../lib/scheduleBuilder";
@@ -39,6 +42,7 @@ const PRESET_DEFS: { key: string; value: string }[] = [
   { key: "daily12", value: "0 12 * * *" },
   { key: "daily18", value: "0 18 * * *" },
   { key: "daily0", value: "0 0 * * *" },
+  { key: "night", value: buildNightCron(60) },
   { key: "weekday9", value: "0 9 * * 1-5" },
   { key: "monday9", value: "0 9 * * 1" },
   { key: "monthly1", value: "0 0 1 * *" },
@@ -115,6 +119,11 @@ export function JobEdit({ mode }: Props) {
     () => parseBuilderFromCron(job.schedule.cron),
     [job.schedule.cron],
   );
+  const nightInterval = useMemo(
+    () => parseNightFromCron(job.schedule.cron),
+    [job.schedule.cron],
+  );
+  const isNight = nightInterval !== null;
   const builderEditable = parsedBuilder !== null;
   const scheduleBuilder = parsedBuilder ?? DEFAULT_SCHEDULE_BUILDER;
 
@@ -258,104 +267,131 @@ export function JobEdit({ mode }: Props) {
             </div>
             <span className="cron-hint">{t("edit.field.scheduleHint")}</span>
             <div className="schedule-builder">
-              {!builderEditable && (
+              {!builderEditable && !isNight && (
                 <div className="schedule-builder-note">
                   {t("edit.field.builder.unsupported")}
                 </div>
               )}
-              <div className="schedule-builder-row">
-                <span className="schedule-builder-label">
-                  {t("edit.field.builder.weekdays")}
-                </span>
-                <div
-                  className="weekday-chips"
-                  role="group"
-                  aria-label={t("edit.field.builder.weekdays")}
-                >
-                  {WEEKDAY_ORDER.map((day) => {
-                    const active = scheduleBuilder.weekdays.includes(day);
-                    return (
-                      <button
-                        type="button"
-                        key={day}
-                        className={`weekday-chip${active ? " active" : ""}`}
-                        aria-pressed={active}
-                        disabled={!builderEditable}
-                        onClick={() => toggleWeekday(day)}
-                      >
-                        {t(`edit.field.builder.day.${day}`)}
-                      </button>
-                    );
-                  })}
+              {isNight ? (
+                <div className="schedule-builder-row schedule-builder-controls">
+                  <span className="schedule-builder-label">
+                    {t("edit.field.builder.nightWindow")}
+                  </span>
+                  <label>
+                    {t("edit.field.builder.interval")}
+                    <select
+                      value={nightInterval ?? 60}
+                      onChange={(e) =>
+                        update("schedule", {
+                          cron: buildNightCron(Number(e.target.value)),
+                        })
+                      }
+                    >
+                      {NIGHT_INTERVAL_OPTIONS.map((m) => (
+                        <option key={m} value={m}>
+                          {t(`edit.field.builder.intervalOption.${m}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
-              </div>
-              <div className="schedule-builder-row schedule-builder-controls">
-                <label>
-                  {t("edit.field.builder.minute")}
-                  <select
-                    value={scheduleBuilder.minute}
-                    disabled={!builderEditable}
-                    onChange={(e) =>
-                      applyBuilder({
-                        ...scheduleBuilder,
-                        minute: Number(e.target.value),
-                      })
-                    }
-                  >
-                    {Array.from({ length: 60 }, (_, i) => (
-                      <option key={i} value={i}>
-                        {String(i).padStart(2, "0")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  {t("edit.field.builder.startHour")}
-                  <select
-                    value={scheduleBuilder.startHour}
-                    disabled={!builderEditable}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      applyBuilder({
-                        ...scheduleBuilder,
-                        startHour: value,
-                        endHour:
-                          scheduleBuilder.endHour < value
-                            ? value
-                            : scheduleBuilder.endHour,
-                      });
-                    }}
-                  >
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <option key={i} value={i}>
-                        {String(i).padStart(2, "0")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  {t("edit.field.builder.endHour")}
-                  <select
-                    value={scheduleBuilder.endHour}
-                    disabled={!builderEditable}
-                    onChange={(e) =>
-                      applyBuilder({
-                        ...scheduleBuilder,
-                        endHour: Math.max(
-                          scheduleBuilder.startHour,
-                          Number(e.target.value),
-                        ),
-                      })
-                    }
-                  >
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <option key={i} value={i}>
-                        {String(i).padStart(2, "0")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              ) : (
+                <>
+                  <div className="schedule-builder-row">
+                    <span className="schedule-builder-label">
+                      {t("edit.field.builder.weekdays")}
+                    </span>
+                    <div
+                      className="weekday-chips"
+                      role="group"
+                      aria-label={t("edit.field.builder.weekdays")}
+                    >
+                      {WEEKDAY_ORDER.map((day) => {
+                        const active = scheduleBuilder.weekdays.includes(day);
+                        return (
+                          <button
+                            type="button"
+                            key={day}
+                            className={`weekday-chip${active ? " active" : ""}`}
+                            aria-pressed={active}
+                            disabled={!builderEditable}
+                            onClick={() => toggleWeekday(day)}
+                          >
+                            {t(`edit.field.builder.day.${day}`)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="schedule-builder-row schedule-builder-controls">
+                    <label>
+                      {t("edit.field.builder.minute")}
+                      <select
+                        value={scheduleBuilder.minute}
+                        disabled={!builderEditable}
+                        onChange={(e) =>
+                          applyBuilder({
+                            ...scheduleBuilder,
+                            minute: Number(e.target.value),
+                          })
+                        }
+                      >
+                        {Array.from({ length: 60 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {String(i).padStart(2, "0")}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      {t("edit.field.builder.startHour")}
+                      <select
+                        value={scheduleBuilder.startHour}
+                        disabled={!builderEditable}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          applyBuilder({
+                            ...scheduleBuilder,
+                            startHour: value,
+                            endHour:
+                              scheduleBuilder.endHour < value
+                                ? value
+                                : scheduleBuilder.endHour,
+                          });
+                        }}
+                      >
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {String(i).padStart(2, "0")}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      {t("edit.field.builder.endHour")}
+                      <select
+                        value={scheduleBuilder.endHour}
+                        disabled={!builderEditable}
+                        onChange={(e) =>
+                          applyBuilder({
+                            ...scheduleBuilder,
+                            endHour: Math.max(
+                              scheduleBuilder.startHour,
+                              Number(e.target.value),
+                            ),
+                          })
+                        }
+                      >
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {String(i).padStart(2, "0")}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </>
+              )}
             </div>
           </label>
           <label className="check">

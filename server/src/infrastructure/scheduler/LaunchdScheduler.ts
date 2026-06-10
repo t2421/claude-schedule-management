@@ -104,6 +104,19 @@ export class LaunchdScheduler implements Scheduler {
     }
   }
 
+  async stop(name: JobName): Promise<void> {
+    const r = await this.runner("launchctl", [
+      "kill",
+      "SIGTERM",
+      `${gui()}/${labelFor(name.value)}`,
+    ]);
+    // launchctl kill exits non-zero when no process is running ("No such
+    // process"). Treat that as a no-op — the caller's intent is satisfied.
+    if (r.code !== 0 && !r.stderr.includes("No such process")) {
+      throw new SchedulerError(r.stderr.trim() || "stop failed");
+    }
+  }
+
   async statuses(): Promise<Map<string, JobStatus>> {
     const r = await this.runner("launchctl", ["list"]);
     const out = new Map<string, JobStatus>();

@@ -69,6 +69,10 @@ export const api = {
     http<{ ok: boolean; error?: string }>(`/runs/${name}/kickstart`, {
       method: "POST",
     }),
+  stopJob: (name: string) =>
+    http<{ ok: boolean; error?: string }>(`/runs/${name}/stop`, {
+      method: "POST",
+    }),
   listLogFiles: (name: string) => http<{ files: LogFile[] }>(`/logs/${name}`),
   readLog: async (name: string, file: string, tail?: number) => {
     const q = tail ? `?tail=${tail}` : "";

@@ -16,5 +16,15 @@ export function runsRoutes(c: Composition) {
     }
   });
 
+  app.post("/:name/stop", async (ctx) => {
+    try {
+      const name = JobName.parse(ctx.req.param("name"));
+      await c.useCases.stopJob(name);
+      return ctx.json({ ok: true });
+    } catch (err) {
+      return handleError(ctx, err);
+    }
+  });
+
   return app;
 }

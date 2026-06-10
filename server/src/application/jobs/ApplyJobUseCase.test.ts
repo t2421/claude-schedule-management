@@ -41,6 +41,7 @@ function makeScheduler(opts: { applyFn?: () => Promise<void> } = {}): Scheduler 
     },
     unload: async () => {},
     kickstart: async () => {},
+    stop: async () => {},
     statuses: async () => new Map(),
   };
 }

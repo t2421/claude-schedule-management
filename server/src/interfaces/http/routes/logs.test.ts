@@ -21,6 +21,7 @@ function makeComposition(
     applyJob: async () => {},
     removeOrphan: async () => {},
     kickstartJob: async () => {},
+    stopJob: async () => {},
     listLogs: async () => [],
     readLog: async () => "",
     pickFolder: async () => "/some/path",

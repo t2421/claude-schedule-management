@@ -40,6 +40,7 @@ function makeScheduler(
     apply: async () => {},
     unload: async () => {},
     kickstart: async () => {},
+    stop: async () => {},
     statuses: async () => {
       statusCallCount++;
       return statusMap;
@@ -138,6 +139,7 @@ describe("makeGetJob", () => {
       apply: async () => {},
       unload: async () => {},
       kickstart: async () => {},
+    stop: async () => {},
       statuses: async () => {
         throw new Error("launchctl list failed");
       },

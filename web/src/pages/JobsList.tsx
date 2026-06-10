@@ -40,6 +40,19 @@ export function JobsList() {
     }
   }
 
+  async function stop(name: string) {
+    setBusy(name);
+    try {
+      const r = await api.stopJob(name);
+      if (!r.ok) setErr(r.error ?? "stop failed");
+      await load();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function remove(name: string) {
     if (!confirm(t("common.deleteConfirm", { name }))) return;
     setBusy(name);
@@ -131,6 +144,15 @@ export function JobsList() {
                     >
                       {t("jobs.action.runNow")}
                     </button>
+                    {j.status.pid !== undefined && (
+                      <button
+                        className="danger"
+                        onClick={() => stop(j.name)}
+                        disabled={busy === j.name}
+                      >
+                        {t("jobs.action.stop")}
+                      </button>
+                    )}
                     <button onClick={() => nav(`/jobs/${j.name}/logs`)}>
                       {t("jobs.action.logs")}
                     </button>

@@ -37,6 +37,7 @@ function makeScheduler(opts: { unloadFn?: () => Promise<void> } = {}): Scheduler
       unloaded.push(name);
     },
     kickstart: async () => {},
+    stop: async () => {},
     statuses: async () => new Map(),
   };
 }
@@ -121,6 +122,7 @@ describe("makeDeleteJob", () => {
         ops.push(`unload:${n.value}`);
       },
       kickstart: async () => {},
+    stop: async () => {},
       statuses: async () => new Map(),
     };
     const deleteJob = makeDeleteJob({ jobs: repo, scheduler });

@@ -20,6 +20,9 @@ export interface Scheduler {
   // Trigger a job to run immediately.
   kickstart(name: JobName): Promise<void>;
 
+  // Send SIGTERM to a currently-running job. No-op if the job is not running.
+  stop(name: JobName): Promise<void>;
+
   // Statuses for jobs currently registered under our label prefix, keyed by
   // job name.
   statuses(): Promise<Map<string, JobStatus>>;

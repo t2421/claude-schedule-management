@@ -35,6 +35,7 @@ function makeScheduler(statusMap: Map<string, JobStatus>): Scheduler {
     apply: async () => {},
     unload: async () => {},
     kickstart: async () => {},
+    stop: async () => {},
     statuses: async () => statusMap,
   };
 }
@@ -172,6 +173,7 @@ describe("makeListJobs", () => {
       apply: async () => {},
       unload: async () => {},
       kickstart: async () => {},
+    stop: async () => {},
       statuses: async () => {
         throw new Error("launchctl list failed");
       },

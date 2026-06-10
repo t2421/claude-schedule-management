@@ -38,6 +38,7 @@
     },
     "action": {
       "runNow": "Run now",
+      "stop": "Stop",
       "logs": "Logs"
     }
   },

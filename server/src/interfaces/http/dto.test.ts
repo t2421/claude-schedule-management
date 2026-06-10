@@ -28,6 +28,7 @@ describe("jobToDto", () => {
       working_directory: "/home/user/project",
       prompt: "run the report",
       provider: "claude",
+      model: undefined,
       claude_args: ["-p"],
       env: undefined,
       timeout_seconds: undefined,

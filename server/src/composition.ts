@@ -13,6 +13,7 @@ import { makeReadLog } from "./application/logs/ReadLogUseCase.js";
 import { makeRemoveOrphan } from "./application/orphans/RemoveOrphanUseCase.js";
 import { makePickFolder } from "./application/picker/PickFolderUseCase.js";
 import { makeKickstartJob } from "./application/runs/KickstartJobUseCase.js";
+import { makeStopJob } from "./application/runs/StopJobUseCase.js";
 
 import { FileLogReader } from "./infrastructure/logs/FileLogReader.js";
 import { YamlJobRepository } from "./infrastructure/persistence/YamlJobRepository.js";
@@ -40,6 +41,7 @@ export function compose() {
     deleteJob: makeDeleteJob({ jobs, scheduler }),
     applyJob: makeApplyJob({ jobs, scheduler }),
     kickstartJob: makeKickstartJob({ jobs, scheduler }),
+    stopJob: makeStopJob({ jobs, scheduler }),
     removeOrphan: makeRemoveOrphan({ orphans }),
     listLogs: makeListLogs({ logs }),
     readLog: makeReadLog({ logs }),

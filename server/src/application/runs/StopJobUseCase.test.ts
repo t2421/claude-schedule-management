@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { makeKickstartJob } from "./KickstartJobUseCase.js";
+import { makeStopJob } from "./StopJobUseCase.js";
 import { NotFoundError } from "../../domain/errors.js";
 import { Job } from "../../domain/job/Job.js";
 import type { JobRepository } from "../../domain/job/JobRepository.js";
@@ -29,66 +29,55 @@ function makeRepo(job: Job | null): JobRepository {
   };
 }
 
-function makeScheduler(opts: { kickstartFn?: () => Promise<void> } = {}): Scheduler & {
-  kickstarted: JobName[];
+function makeScheduler(opts: { stopFn?: () => Promise<void> } = {}): Scheduler & {
+  stopped: JobName[];
 } {
-  const kickstarted: JobName[] = [];
+  const stopped: JobName[] = [];
   return {
-    kickstarted,
+    stopped,
     apply: async () => {},
     unload: async () => {},
-    kickstart: async (name) => {
-      if (opts.kickstartFn) await opts.kickstartFn();
-      kickstarted.push(name);
+    kickstart: async () => {},
+    stop: async (name) => {
+      if (opts.stopFn) await opts.stopFn();
+      stopped.push(name);
     },
-    stop: async () => {},
     statuses: async () => new Map(),
   };
 }
 
-describe("makeKickstartJob", () => {
-  it("calls scheduler.kickstart when job exists", async () => {
+describe("makeStopJob", () => {
+  it("calls scheduler.stop when job exists", async () => {
     const name = JobName.parse("daily-review");
     const job = makeJob("daily-review");
     const repo = makeRepo(job);
     const scheduler = makeScheduler();
-    const kickstartJob = makeKickstartJob({ jobs: repo, scheduler });
+    const stopJob = makeStopJob({ jobs: repo, scheduler });
 
-    await kickstartJob(name);
+    await stopJob(name);
 
-    assert.equal(scheduler.kickstarted.length, 1);
-    assert.equal(scheduler.kickstarted[0].value, "daily-review");
+    assert.equal(scheduler.stopped.length, 1);
+    assert.equal(scheduler.stopped[0].value, "daily-review");
   });
 
   it("throws NotFoundError when job does not exist", async () => {
     const name = JobName.parse("missing-job");
     const repo = makeRepo(null);
     const scheduler = makeScheduler();
-    const kickstartJob = makeKickstartJob({ jobs: repo, scheduler });
+    const stopJob = makeStopJob({ jobs: repo, scheduler });
 
-    await assert.rejects(() => kickstartJob(name), NotFoundError);
-    assert.equal(scheduler.kickstarted.length, 0);
-  });
-
-  it("does not call scheduler when job is not found", async () => {
-    const name = JobName.parse("ghost-job");
-    const repo = makeRepo(null);
-    const scheduler = makeScheduler();
-    const kickstartJob = makeKickstartJob({ jobs: repo, scheduler });
-
-    await assert.rejects(() => kickstartJob(name), NotFoundError);
-
-    assert.equal(scheduler.kickstarted.length, 0);
+    await assert.rejects(() => stopJob(name), NotFoundError);
+    assert.equal(scheduler.stopped.length, 0);
   });
 
   it("error message includes the job name", async () => {
     const name = JobName.parse("my-job");
     const repo = makeRepo(null);
     const scheduler = makeScheduler();
-    const kickstartJob = makeKickstartJob({ jobs: repo, scheduler });
+    const stopJob = makeStopJob({ jobs: repo, scheduler });
 
     await assert.rejects(
-      () => kickstartJob(name),
+      () => stopJob(name),
       (err: unknown) => {
         assert.ok(err instanceof NotFoundError);
         assert.ok(
@@ -100,17 +89,17 @@ describe("makeKickstartJob", () => {
     );
   });
 
-  it("propagates errors from scheduler.kickstart", async () => {
+  it("propagates errors from scheduler.stop", async () => {
     const name = JobName.parse("flaky-job");
     const job = makeJob("flaky-job");
     const repo = makeRepo(job);
     const scheduler = makeScheduler({
-      kickstartFn: async () => {
+      stopFn: async () => {
         throw new Error("launchctl failed");
       },
     });
-    const kickstartJob = makeKickstartJob({ jobs: repo, scheduler });
+    const stopJob = makeStopJob({ jobs: repo, scheduler });
 
-    await assert.rejects(() => kickstartJob(name), /launchctl failed/);
+    await assert.rejects(() => stopJob(name), /launchctl failed/);
   });
 });
